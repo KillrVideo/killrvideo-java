@@ -1,0 +1,17 @@
+version: '2'
+
+# Other services are specified in .\lib\killrvideo-docker-common\docker-compose.yaml
+services:
+  server:
+    image: killrvideo/killrvideo-java-server
+    ports:
+    - "8899:8899"
+    depends_on:
+    - dse
+    - etcd
+    - web
+    environment:
+      KILLRVIDEO_HOST_IP: $KILLRVIDEO_HOST_IP
+      KILLRVIDEO_DOCKER_IP: $KILLRVIDEO_DOCKER_IP
+      KILLRVIDEO_DSE_USERNAME: $KILLRVIDEO_DSE_USERNAME
+      KILLRVIDEO_DSE_PASSWORD: $KILLRVIDEO_DSE_PASSWORD
