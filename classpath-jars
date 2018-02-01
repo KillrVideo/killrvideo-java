@@ -1,3 +1,4 @@
+# Jars to include in the classpath used by killrvideo.sh
 .m2/repository/aopalliance/aopalliance/1.0/aopalliance-1.0.jar
 .m2/repository/ch/qos/logback/logback-classic/1.1.2/logback-classic-1.1.2.jar
 .m2/repository/ch/qos/logback/logback-core/1.1.2/logback-core-1.1.2.jar
