@@ -10,7 +10,12 @@ import com.datastax.driver.mapping.annotations.Table;
 import killrvideo.utils.TypeConverter;
 import killrvideo.video_catalog.VideoCatalogServiceOuterClass.VideoPreview;
 
-@Table(keyspace = Schema.KEYSPACE, name = "user_videos")
+/**
+ * Pojo representing DTO for table 'user_videos'
+ *
+ * @author DataStax evangelist team.
+ */
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_USER_VIDEOS)
 public class UserVideos extends AbstractVideoList {
 
     /** Serial. */

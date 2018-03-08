@@ -26,7 +26,7 @@ public class KillrVideoConfiguration {
    
     // --- Global Infos
     
-    @Value("${killrvideo.application.name: 'KillrVideo'}")
+    @Value("${killrvideo.application.name:KillrVideo}")
     private String applicationName;
     
     @Value("${killrvideo.application.instance.id: 0}")

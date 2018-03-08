@@ -8,8 +8,13 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.ConsistencyLevel;
@@ -18,26 +23,27 @@ import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.dse.DseSession;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
-import killrvideo.entity.Schema;
-import killrvideo.utils.FutureUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
 import com.google.common.eventbus.EventBus;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import killrvideo.common.CommonTypes.Uuid;
+import killrvideo.entity.Schema;
 import killrvideo.entity.VideoPlaybackStats;
 import killrvideo.events.CassandraMutationError;
-import killrvideo.statistics.StatisticsServiceGrpc.AbstractStatisticsService;
-import killrvideo.statistics.StatisticsServiceOuterClass.*;
+import killrvideo.statistics.StatisticsServiceGrpc.StatisticsServiceImplBase;
+import killrvideo.statistics.StatisticsServiceOuterClass.GetNumberOfPlaysRequest;
+import killrvideo.statistics.StatisticsServiceOuterClass.GetNumberOfPlaysResponse;
+import killrvideo.statistics.StatisticsServiceOuterClass.PlayStats;
+import killrvideo.statistics.StatisticsServiceOuterClass.RecordPlaybackStartedRequest;
+import killrvideo.statistics.StatisticsServiceOuterClass.RecordPlaybackStartedResponse;
+import killrvideo.utils.FutureUtils;
 import killrvideo.validation.KillrVideoInputValidator;
 
 @Service
-public class StatisticsService extends AbstractStatisticsService {
-
+//public class StatisticsService extends AbstractStatisticsService {
+public class StatisticsService extends StatisticsServiceImplBase {
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(StatisticsService.class);
 
     @Inject
@@ -72,9 +78,6 @@ public class StatisticsService extends AbstractStatisticsService {
 
     @Override
     public void recordPlaybackStarted(RecordPlaybackStartedRequest request, StreamObserver<RecordPlaybackStartedResponse> responseObserver) {
-
-        LOGGER.debug("Start recording playback");
-
         if (!validator.isValid(request, responseObserver)) {
             return;
         }
@@ -95,9 +98,7 @@ public class StatisticsService extends AbstractStatisticsService {
                     if (rs != null) {
                         responseObserver.onNext(RecordPlaybackStartedResponse.newBuilder().build());
                         responseObserver.onCompleted();
-
-                        LOGGER.debug("End recording playback");
-
+                        
                     } else if (ex != null) {
                         LOGGER.error("Exception recording playback : " + mergeStackTrace(ex));
 

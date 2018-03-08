@@ -38,9 +38,11 @@ public class EtcdConfiguration {
     @Bean
     public EtcdClient connectToEtcd() {
         final String etcdUrl = String.format("http://%s:%d", etcdServerHost, etcdServerPort);
-        LOGGER.info("Initializing ETCD connection to '{}'", etcdUrl);
-        
-        return new EtcdClient(URI.create(etcdUrl));
+        LOGGER.info("Initializing connection to ETCD Server");
+        LOGGER.info(" + Contact '{}'", etcdUrl);
+        EtcdClient etcdClient = new EtcdClient(URI.create(etcdUrl));
+        LOGGER.info("Connection etablished to ETCD Server");
+        return etcdClient;
     }
     
     /*@Bean

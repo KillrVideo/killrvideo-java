@@ -31,7 +31,7 @@ import killrvideo.entity.Schema;
 import killrvideo.entity.User;
 import killrvideo.entity.UserCredentials;
 import killrvideo.events.CassandraMutationError;
-import killrvideo.user_management.UserManagementServiceGrpc.AbstractUserManagementService;
+import killrvideo.user_management.UserManagementServiceGrpc.UserManagementServiceImplBase;
 import killrvideo.user_management.UserManagementServiceOuterClass.CreateUserRequest;
 import killrvideo.user_management.UserManagementServiceOuterClass.CreateUserResponse;
 import killrvideo.user_management.UserManagementServiceOuterClass.GetUserProfileRequest;
@@ -45,7 +45,8 @@ import killrvideo.utils.TypeConverter;
 import killrvideo.validation.KillrVideoInputValidator;
 
 @Service
-public class UserManagementService extends AbstractUserManagementService {
+//public class UserManagementService extends AbstractUserManagementService {
+public class UserManagementService extends UserManagementServiceImplBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserManagementService.class);
 

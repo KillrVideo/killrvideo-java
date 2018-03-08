@@ -14,7 +14,6 @@ public class KillrVideoServer {
      */
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(KillrVideoServer.class);
-        app.setWebEnvironment(false);
         app.setBannerMode(Banner.Mode.OFF);
         app.run(args);
     }

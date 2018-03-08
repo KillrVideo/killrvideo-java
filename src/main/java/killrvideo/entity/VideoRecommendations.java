@@ -1,14 +1,17 @@
 package killrvideo.entity;
 
-import static killrvideo.entity.Schema.KEYSPACE;
-
 import java.util.UUID;
 
 import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
 
-@Table(keyspace = KEYSPACE, name = "video_recommendations")
+/**
+ * Pojo representing DTO for table 'video_recommendations'.
+ *
+ * @author DataStax evangelist team.
+ */
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_VIDEO_RECOMMENDATIONS)
 public class VideoRecommendations extends AbstractVideoList {
 
     /** Serial. */

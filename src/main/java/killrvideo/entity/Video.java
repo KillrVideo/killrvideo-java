@@ -1,7 +1,5 @@
 package killrvideo.entity;
 
-import static killrvideo.entity.Schema.KEYSPACE;
-
 import java.util.Date;
 import java.util.Set;
 import java.util.UUID;
@@ -22,7 +20,12 @@ import killrvideo.video_catalog.VideoCatalogServiceOuterClass.GetVideoResponse;
 import killrvideo.video_catalog.VideoCatalogServiceOuterClass.VideoLocationType;
 import killrvideo.video_catalog.VideoCatalogServiceOuterClass.VideoPreview;
 
-@Table(keyspace = KEYSPACE, name = "videos")
+/**
+ * Pojo representing DTO for table 'videos'.
+ *
+ * @author DataStax evangelist team.
+ */
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_VIDEOS)
 public class Video extends AbstractVideo {
 
     /** Serial. */
@@ -80,6 +83,9 @@ public class Video extends AbstractVideo {
         this.addedDate = addedDate;
     }
     
+    /**
+     * Mapping to generated GPRC beans (Full detailed)
+     */
     public GetVideoResponse toVideoResponse() {
         final GetVideoResponse videoResponse = GetVideoResponse
                 .newBuilder()
@@ -96,6 +102,9 @@ public class Video extends AbstractVideo {
         return videoResponse;
     }
 
+    /**
+     * Mapping to generated GPRC beans (Summary).
+     */
     public VideoPreview toVideoPreview() {
         return VideoPreview.newBuilder()
                 .setAddedDate(TypeConverter.dateToTimestamp(addedDate))
@@ -106,6 +115,9 @@ public class Video extends AbstractVideo {
                 .build();
     }
 
+    /**
+     * Mapping to generated GPRC beans (Search result special).
+     */
     public SearchResultsVideoPreview toResultVideoPreview() {
         return SearchResultsVideoPreview
                 .newBuilder()
@@ -117,6 +129,9 @@ public class Video extends AbstractVideo {
                 .build();
     }
 
+    /**
+     * Mapping to generated GPRC beans. (Suggested videos special)
+     */
     public SuggestedVideoPreview toSuggestedVideoPreview() {
         return SuggestedVideoPreview
                 .newBuilder()

@@ -2,36 +2,46 @@ package killrvideo.service;
 
 import static killrvideo.utils.ExceptionUtils.mergeStackTrace;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import com.datastax.driver.core.*;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.dse.DseSession;
-import com.datastax.driver.mapping.Mapper;
-import com.google.common.reflect.TypeToken;
-import killrvideo.entity.Schema;
-import killrvideo.entity.Video;
-import killrvideo.utils.FutureUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.PagingState;
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.Row;
+import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.datastax.driver.dse.DseSession;
+import com.datastax.driver.mapping.Mapper;
+import com.google.common.reflect.TypeToken;
+
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import killrvideo.search.SearchServiceGrpc.AbstractSearchService;
+import killrvideo.entity.Schema;
+import killrvideo.entity.Video;
+import killrvideo.search.SearchServiceGrpc.SearchServiceImplBase;
 import killrvideo.search.SearchServiceOuterClass.GetQuerySuggestionsRequest;
 import killrvideo.search.SearchServiceOuterClass.GetQuerySuggestionsResponse;
 import killrvideo.search.SearchServiceOuterClass.SearchVideosRequest;
 import killrvideo.search.SearchServiceOuterClass.SearchVideosResponse;
+import killrvideo.utils.FutureUtils;
 import killrvideo.validation.KillrVideoInputValidator;
 
 @Service
-public class SearchService extends AbstractSearchService {
+//public class SearchService extends AbstractSearchService {
+public class SearchService extends SearchServiceImplBase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchService.class);
 
@@ -45,8 +55,11 @@ public class SearchService extends AbstractSearchService {
     DseSession dseSession;
 
     private String videosTableName;
+    
     private PreparedStatement getQuerySuggestions_getTagsPrepared;
+    
     private PreparedStatement searchVideos_getVideosWithSearchPrepared;
+    
     private final Set<String> excludeConjunctions = new HashSet<String>();
 
     @PostConstruct
@@ -67,13 +80,19 @@ public class SearchService extends AbstractSearchService {
                         .where(QueryBuilder.eq("solr_query", QueryBuilder.bindMarker()))
         ).setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
 
-        searchVideos_getVideosWithSearchPrepared = dseSession.prepare(
+        searchVideos_getVideosWithSearchPrepared = getQuerySuggestions_getTagsPrepared;
+        
+        /*
+         *  Warning at startup because initialized twice the same query
+         *  
+               dseSession.prepare(
                 QueryBuilder
                         .select()
                         .all()
                         .from(Schema.KEYSPACE, videosTableName)
                         .where(QueryBuilder.eq("solr_query", QueryBuilder.bindMarker()))
         ).setConsistencyLevel(ConsistencyLevel.LOCAL_ONE);
+        */
 
         /**
          * Create a set of sentence conjunctions and other "undesirable"

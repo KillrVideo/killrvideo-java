@@ -56,7 +56,7 @@ import killrvideo.events.CassandraMutationError;
 import killrvideo.utils.FutureUtils;
 import killrvideo.utils.TypeConverter;
 import killrvideo.validation.KillrVideoInputValidator;
-import killrvideo.video_catalog.VideoCatalogServiceGrpc.AbstractVideoCatalogService;
+import killrvideo.video_catalog.VideoCatalogServiceGrpc.VideoCatalogServiceImplBase;
 import killrvideo.video_catalog.VideoCatalogServiceOuterClass.GetLatestVideoPreviewsRequest;
 import killrvideo.video_catalog.VideoCatalogServiceOuterClass.GetLatestVideoPreviewsResponse;
 import killrvideo.video_catalog.VideoCatalogServiceOuterClass.GetUserVideoPreviewsRequest;
@@ -72,7 +72,8 @@ import killrvideo.video_catalog.VideoCatalogServiceOuterClass.VideoPreview;
 import killrvideo.video_catalog.events.VideoCatalogEvents.YouTubeVideoAdded;
 
 @Service
-public class VideoCatalogService extends AbstractVideoCatalogService {
+//public class VideoCatalogService extends AbstractVideoCatalogService {
+public class VideoCatalogService extends VideoCatalogServiceImplBase {
 
     // used as a container for custom paging state for latest videos
     class CustomPagingState {

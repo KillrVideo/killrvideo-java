@@ -1,8 +1,8 @@
 package killrvideo.entity;
 
 import static java.util.UUID.fromString;
-import static killrvideo.entity.Schema.KEYSPACE;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
@@ -25,8 +25,11 @@ import killrvideo.utils.TypeConverter;
  *
  * @author DataStax evangelist team.
  */
-@Table(keyspace = KEYSPACE, name = "comments_by_video")
-public class CommentsByVideo {
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_COMMENTS_BY_VIDEO)
+public class CommentsByVideo implements Serializable {
+
+    /** Serial. */
+    private static final long serialVersionUID = -6365600205169278881L;
 
     @PartitionKey
     private UUID videoid;
@@ -56,23 +59,34 @@ public class CommentsByVideo {
     @Computed("toTimestamp(commentid)")
     private Date dateOfComment;
 
-    public CommentsByVideo() {
-    }
+    /**
+     * Default constructor (reflection)
+     */
+    public CommentsByVideo() {}
 
+    /**
+     * Constructor with all parameters.
+     */
     public CommentsByVideo(UUID videoid, UUID commentid, UUID userid, String comment) {
-        this.videoid = videoid;
-        this.commentid = commentid;
-        this.userid = userid;
-        this.comment = comment;
+        this.videoid    = videoid;
+        this.commentid  = commentid;
+        this.userid     = userid;
+        this.comment    = comment;
     }
 
+    /**
+     * Constructor from GRPC generated request.
+     */
     public CommentsByVideo(CommentOnVideoRequest request) {
-        this.videoid = fromString(request.getVideoId().getValue());
-        this.commentid = fromString(request.getCommentId().getValue());
-        this.userid = fromString(request.getUserId().getValue());
-        this.comment = request.getComment();
+        this.videoid    = fromString(request.getVideoId().getValue());
+        this.commentid  = fromString(request.getCommentId().getValue());
+        this.userid     = fromString(request.getUserId().getValue());
+        this.comment    = request.getComment();
     }
 
+    /**
+     * Mapping to GRPC generated classes.
+     */
     public CommentsServiceOuterClass.VideoComment toVideoComment() {
         return CommentsServiceOuterClass.VideoComment
                 .newBuilder()

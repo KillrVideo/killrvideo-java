@@ -3,7 +3,10 @@ package killrvideo.configuration;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.inject.Inject;
 
@@ -14,7 +17,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.datastax.driver.core.AuthProvider;
-import com.datastax.driver.dse.DseCluster;
 import com.datastax.driver.dse.DseCluster.Builder;
 import com.datastax.driver.dse.DseSession;
 import com.datastax.driver.dse.auth.DsePlainTextAuthProvider;
@@ -22,6 +24,9 @@ import com.datastax.driver.dse.graph.GraphOptions;
 import com.datastax.driver.dse.graph.GraphProtocol;
 import com.datastax.driver.mapping.MappingManager;
 import com.datastax.dse.graph.api.DseGraph;
+import com.evanlennick.retry4j.CallExecutor;
+import com.evanlennick.retry4j.config.RetryConfig;
+import com.evanlennick.retry4j.config.RetryConfigBuilder;
 import com.xqbase.etcd4j.EtcdClient;
 import com.xqbase.etcd4j.EtcdClientException;
 
@@ -59,23 +64,52 @@ public class DseConfiguration {
     @Value("#{environment.KILLRVIDEO_HOST_IP}")
     public Optional < String > serverIp;
     
+    @Value("${killrvideo.cassandra.maxNumberOfTries: 10}")
+    private int maxNumberOfTries  = 10;
+    
+    @Value("${killrvideo.cassandra.delayBetweenTries: 2}")
+    private int delayBetweenTries = 2;
+    
     @Inject
     private EtcdClient etcdClient;
     
     @Bean
     public DseSession initializeDSE() {
-         LOGGER.info("Initializing connection to DSE Cluster...");
          long top = System.currentTimeMillis();
+         LOGGER.info("Initializing connection to DSE Cluster...");
          Builder clusterConfig = new Builder();
+         // Use to test limit condition
+         // clusterConfig.addContactPointsWithPorts(asSocketInetAdress("localhost:9000").get());
          populateContactPoints(clusterConfig);
          populateAuthentication(clusterConfig);
          populateGraphOptions(clusterConfig);
          
-         DseCluster dseCluster = clusterConfig.build();
-         DseSession dseSession = dseCluster.connect();
-         long timeElapsed = System.currentTimeMillis() - top;
-         LOGGER.info("Connection etablished to DSE Cluster in {} millis.", timeElapsed);
-         return dseSession;
+         final AtomicInteger atomicCount = new AtomicInteger(1);
+         Callable<DseSession> connectionToDse = () -> {
+             return clusterConfig.build().connect();
+         };
+         
+         RetryConfig config = new RetryConfigBuilder()
+                 .retryOnAnyException()
+                  //.retryOnSpecificExceptions(NoHostAvailableException.class)
+                 .withMaxNumberOfTries(maxNumberOfTries)
+                 .withDelayBetweenTries(delayBetweenTries, ChronoUnit.SECONDS)
+                 .withFixedBackoff()
+                 .build();
+         
+         return new CallExecutor<DseSession>(config)
+                 .afterFailedTry(s -> { 
+                     LOGGER.info("Attempt #{}/{} failed.. trying in {} seconds.", atomicCount.getAndIncrement(),
+                             maxNumberOfTries,  delayBetweenTries); })
+                 .onFailure(s -> {
+                     LOGGER.error("Cannot connection to DSE after {} attempts, exiting", maxNumberOfTries);
+                     System.err.println("Can not conenction to DSE after " + maxNumberOfTries + " attempts, exiting");
+                     System.exit(500);
+                  })
+                 .onSuccess(s -> {   
+                     long timeElapsed = System.currentTimeMillis() - top;
+                     LOGGER.info("Connection etablished to DSE Cluster in {} millis.", timeElapsed);})
+                 .execute(connectionToDse).getResult();
     }
     
     @Bean
@@ -96,9 +130,10 @@ public class DseConfiguration {
      */
     private void populateContactPoints(Builder clusterConfig)  {
         try {
-            etcdClient.listDir("/killrvideo/services/cassandra").stream()
+            etcdClient.listDir("/killrvideo/services/cassandra")
+                      .stream()
                       .forEach(node -> asSocketInetAdress(node.value)
-                              .ifPresent(clusterConfig::addContactPointsWithPorts));
+                      .ifPresent(clusterConfig::addContactPointsWithPorts));
             clusterConfig.withClusterName(dseClusterName);
         } catch (EtcdClientException e) {
             /**
@@ -121,10 +156,10 @@ public class DseConfiguration {
             AuthProvider cassandraAuthProvider = new DsePlainTextAuthProvider(dseUsername.get(), dsePassword.get());
             clusterConfig.withAuthProvider(cassandraAuthProvider);
             String obfuscatedPassword = new String(new char[dsePassword.get().length()]).replace("\0", "*");
-            LOGGER.info("Using supplied DSE username: '%s' and password: '%s' from environment variables", 
+            LOGGER.info(" + Using supplied DSE username: '%s' and password: '%s' from environment variables", 
                         dseUsername.get(), obfuscatedPassword);
         } else {
-            LOGGER.info("DSE cluster authentication method was NOT executed (no username/password provided)");
+            LOGGER.info(" + Connection is not authenticated (no username/password)");
         }
     }
     
@@ -150,15 +185,15 @@ public class DseConfiguration {
             if (contactPoint != null && contactPoint.length() > 0) {
                 String[] chunks = contactPoint.split(":");
                 if (chunks.length == 2) {
-                    LOGGER.info("Adding node '{}' to the Cassandra cluster definition", contactPoint);
+                    LOGGER.info(" + Adding node '{}' to the Cassandra cluster definition", contactPoint);
                     return Optional.of(new InetSocketAddress(InetAddress.getByName(chunks[0]), Integer.parseInt(chunks[1])));
                 }
             }
         } catch (NumberFormatException e) {
-            LOGGER.warn("Cannot read contactPoint - "
+            LOGGER.warn(" + Cannot read contactPoint - "
                     + "Invalid Port Numer, entry '" + contactPoint + "' will be ignored", e);
         } catch (UnknownHostException e) {
-            LOGGER.warn("Cannot read contactPoint - "
+            LOGGER.warn(" + Cannot read contactPoint - "
                     + "Invalid Hostname, entry '" + contactPoint + "' will be ignored", e);
         }
         return target;

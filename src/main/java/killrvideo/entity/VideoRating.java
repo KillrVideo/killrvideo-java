@@ -1,7 +1,6 @@
 package killrvideo.entity;
 
-import static killrvideo.entity.Schema.KEYSPACE;
-
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,8 +11,16 @@ import com.datastax.driver.mapping.annotations.Table;
 import killrvideo.ratings.RatingsServiceOuterClass.GetRatingResponse;
 import killrvideo.utils.TypeConverter;
 
-@Table(keyspace = KEYSPACE, name = "video_ratings")
-public class VideoRating {
+/**
+ * Pojo representing DTO for table 'video_ratings'.
+ *
+ * @author DataStax evangelist team.
+ */
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_VIDEOS_RATINGS)
+public class VideoRating implements Serializable {
+
+    /** Serial. */
+    private static final long serialVersionUID = -8874199914791405808L;
 
     @PartitionKey
     private UUID videoid;
@@ -24,6 +31,9 @@ public class VideoRating {
     @Column(name = "rating_total")
     private Long ratingTotal;
 
+    /**
+     * Mapping to generated GPRC beans.
+     */
     public GetRatingResponse toRatingResponse() {
         return GetRatingResponse.newBuilder()
                 .setVideoId(TypeConverter.uuidToUuid(videoid))

@@ -19,6 +19,10 @@ public class TypeConverter {
                 .setSeconds(instant.getEpochSecond())
                 .setNanos(instant.getNano()).build();
     }
+    
+    public static Timestamp epochTimeToTimeStamp(long epoch) {
+        return Timestamp.newBuilder().setSeconds(epoch).build();
+    }
 
     public static Timestamp dateToTimestamp(Date date) {
         return instantToTimeStamp(date.toInstant());

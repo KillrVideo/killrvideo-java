@@ -3,13 +3,15 @@ spring:
     banner-mode: "off"
         
 # Support keys for our application
-application: 
- name: killrvideo
 
 # Custom 'killrvideo' keys App
 killrvideo:
+  application: 
+    name: killrvideo
+    instance: 
+      id: 0
   
-  grpc-server:
+  grpc-server: 
     port: 8899
   
   threadpool:
@@ -29,4 +31,6 @@ killrvideo:
   cassandra:
     clustername: killrvideo
     mutation-error-log: /tmp/killrvideo-mutation-errors.log
+    maxNumberOfTries: 10
+    delayBetweenTries: 2
     

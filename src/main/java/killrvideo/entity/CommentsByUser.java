@@ -1,7 +1,6 @@
 package killrvideo.entity;
 
 import static java.util.UUID.fromString;
-import static killrvideo.entity.Schema.KEYSPACE;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -26,8 +25,8 @@ import killrvideo.utils.TypeConverter;
  *
  * @author DataStax evangelist team.
  */
-@Table(keyspace = KEYSPACE, name = "comments_by_user")
-public class CommentsByUser implements Serializable {
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_COMMENTS_BY_USER)
+public class CommentsByUser implements Serializable, Schema {
 
     /** Serial. */
     private static final long serialVersionUID = -4443951809189156563L;
@@ -60,8 +59,14 @@ public class CommentsByUser implements Serializable {
     @Computed("toTimestamp(commentid)")
     private Date dateOfComment;
 
+    /**
+     * Default constructor (reflection)
+     */
     public CommentsByUser() {}
 
+    /**
+     * Constructor with all parameters.
+     */
     public CommentsByUser(UUID userid, UUID commentid, UUID videoid, String comment) {
         this.userid = userid;
         this.commentid = commentid;
@@ -69,6 +74,9 @@ public class CommentsByUser implements Serializable {
         this.comment = comment;
     }
 
+    /**
+     * Constructor from GRPC generated request.
+     */
     public CommentsByUser(CommentOnVideoRequest request) {
         this.userid = fromString(request.getUserId().getValue());
         this.commentid = fromString(request.getCommentId().getValue());
@@ -78,8 +86,6 @@ public class CommentsByUser implements Serializable {
 
     /**
      * Mapping to GRPC generated classes.
-     *
-     * @return
      */
     public CommentsServiceOuterClass.UserComment toUserComment() {
         return CommentsServiceOuterClass.UserComment

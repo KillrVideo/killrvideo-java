@@ -1,7 +1,6 @@
 package killrvideo.entity;
 
-import static killrvideo.entity.Schema.KEYSPACE;
-
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
@@ -15,8 +14,11 @@ import com.datastax.driver.mapping.annotations.Table;
  *
  * @author DataStax evangelist team.
  */
-@Table(keyspace = KEYSPACE, name = "encoding_job_notifications")
-public class EncodingJobNotification {
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_ENCODING_JOBS_NOTIFICATION)
+public class EncodingJobNotification implements Serializable {
+
+    /** Serial. */
+    private static final long serialVersionUID = -7458495256206978510L;
 
     @PartitionKey
     private UUID videoid;
@@ -37,9 +39,14 @@ public class EncodingJobNotification {
     @Column
     private String oldstate;
 
-    public EncodingJobNotification() {
-    }
+    /**
+     * Default constructor.
+     */
+    public EncodingJobNotification() {}
 
+    /**
+     * Constructor with all parameters.
+     */
     public EncodingJobNotification(UUID videoid, Date statusDate, String etag, String jobid, String newstate, String oldstate) {
         this.videoid = videoid;
         this.statusDate = statusDate;

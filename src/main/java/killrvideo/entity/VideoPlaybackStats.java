@@ -1,7 +1,6 @@
 package killrvideo.entity;
 
-import static killrvideo.entity.Schema.KEYSPACE;
-
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,8 +11,16 @@ import com.datastax.driver.mapping.annotations.Table;
 import killrvideo.statistics.StatisticsServiceOuterClass.PlayStats;
 import killrvideo.utils.TypeConverter;
 
-@Table(keyspace = KEYSPACE, name = "video_playback_stats")
-public class VideoPlaybackStats {
+/**
+ * Pojo representing DTO for table 'video_playback_stats'.
+ *
+ * @author DataStax evangelist team.
+ */
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_PLAYBACK_STATS)
+public class VideoPlaybackStats implements Serializable {
+
+    /** Serial. */
+    private static final long serialVersionUID = -8636413035520458200L;
 
     @PartitionKey
     private UUID videoid;
@@ -26,6 +33,9 @@ public class VideoPlaybackStats {
     @Column
     private Long views;
 
+    /**
+     * Mapping to generated GPRC beans.
+     */
     public PlayStats toPlayStats() {
         return PlayStats.newBuilder()
                 .setVideoId(TypeConverter.uuidToUuid(videoid))

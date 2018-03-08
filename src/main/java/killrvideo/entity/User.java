@@ -14,7 +14,12 @@ import com.datastax.driver.mapping.annotations.Table;
 import killrvideo.user_management.UserManagementServiceOuterClass.UserProfile;
 import killrvideo.utils.TypeConverter;
 
-@Table(keyspace = Schema.KEYSPACE, name = "users")
+/**
+ * Pojo representing DTO for table 'users'.
+ *
+ * @author DataStax evangelist team.
+ */
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_USERS)
 public class User {
 
     @PartitionKey
@@ -36,9 +41,14 @@ public class User {
     @Column(name = "created_date")
     private Date createdAt;
 
-    public User() {
-    }
+    /**
+     * Default constructor (reflection)
+     */
+    public User() {}
 
+    /**
+     * Constructor with all parameters.
+     */
     public User(UUID userid, String firstname, String lastname, String email, Date createdAt) {
         this.userid = userid;
         this.firstname = firstname;
@@ -47,6 +57,9 @@ public class User {
         this.createdAt = createdAt;
     }
 
+    /**
+     * Mapping to GRPC generated classes.
+     */
     public UserProfile toUserProfile() {
         return UserProfile.newBuilder()
                 .setEmail(email)

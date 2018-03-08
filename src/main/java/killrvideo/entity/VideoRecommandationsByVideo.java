@@ -1,17 +1,24 @@
 package killrvideo.entity;
 
-import static killrvideo.entity.Schema.KEYSPACE;
-
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
+import com.datastax.driver.mapping.annotations.ClusteringColumn;
 import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
-import com.datastax.driver.mapping.annotations.ClusteringColumn;
 
-@Table(keyspace = KEYSPACE, name = "video_recommendations_by_video")
-public class VideoRecommandationsByVideo {
+/**
+ * Pojo representing DTO for table 'video_recommendations_by_video'.
+ *
+ * @author DataStax evangelist team.
+ */
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_VIDEO_RECOMMENDATIONS_BYVIDEO)
+public class VideoRecommandationsByVideo implements Serializable {
+
+    /** Serial. */
+    private static final long serialVersionUID = -7712611503821491103L;
 
     @PartitionKey
     private UUID videoid;
@@ -34,9 +41,14 @@ public class VideoRecommandationsByVideo {
     @Column
     private float rating;
 
-    public VideoRecommandationsByVideo() {
-    }
+    /**
+     * Default constructor (reflection)
+     */
+    public VideoRecommandationsByVideo() {}
 
+    /**
+     * Constructor with all parameters.
+     */
     public VideoRecommandationsByVideo(UUID videoid, Date addedDate, UUID authorid, String name, String previewImageLocation, UUID userid, float rating) {
         this.videoid = videoid;
         this.addedDate = addedDate;

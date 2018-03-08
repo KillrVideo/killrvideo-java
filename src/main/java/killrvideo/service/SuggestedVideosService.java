@@ -1,6 +1,30 @@
 package killrvideo.service;
 
-import com.datastax.driver.core.*;
+import static killrvideo.graph.KillrVideoTraversalConstants.VERTEX_USER;
+import static killrvideo.graph.KillrVideoTraversalConstants.VERTEX_VIDEO;
+import static killrvideo.graph.__.rated;
+import static killrvideo.graph.__.taggedWith;
+import static killrvideo.graph.__.uploaded;
+import static killrvideo.utils.ExceptionUtils.mergeStackTrace;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
+import javax.annotation.PostConstruct;
+import javax.inject.Inject;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.datastax.driver.core.BoundStatement;
+import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.datastax.driver.dse.DseSession;
 import com.datastax.driver.dse.graph.GraphNode;
@@ -10,43 +34,32 @@ import com.datastax.driver.dse.graph.Vertex;
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.Result;
 import com.datastax.dse.graph.api.DseGraph;
-
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.Subscribe;
-import io.grpc.stub.StreamObserver;
 
+import io.grpc.stub.StreamObserver;
 import killrvideo.common.CommonTypes.Uuid;
 import killrvideo.entity.Schema;
 import killrvideo.entity.Video;
 import killrvideo.graph.KillrVideoTraversal;
 import killrvideo.graph.KillrVideoTraversalSource;
 import killrvideo.ratings.events.RatingsEvents.UserRatedVideo;
-import killrvideo.suggested_videos.SuggestedVideoServiceGrpc.AbstractSuggestedVideoService;
-import killrvideo.suggested_videos.SuggestedVideosService.*;
+import killrvideo.suggested_videos.SuggestedVideoServiceGrpc.SuggestedVideoServiceImplBase;
+import killrvideo.suggested_videos.SuggestedVideosService.GetRelatedVideosRequest;
+import killrvideo.suggested_videos.SuggestedVideosService.GetRelatedVideosResponse;
+import killrvideo.suggested_videos.SuggestedVideosService.GetSuggestedForUserRequest;
+import killrvideo.suggested_videos.SuggestedVideosService.GetSuggestedForUserResponse;
+import killrvideo.suggested_videos.SuggestedVideosService.SuggestedVideoPreview;
 import killrvideo.user_management.events.UserManagementEvents.UserCreated;
 import killrvideo.utils.FutureUtils;
 import killrvideo.utils.TypeConverter;
 import killrvideo.validation.KillrVideoInputValidator;
 import killrvideo.video_catalog.events.VideoCatalogEvents.YouTubeVideoAdded;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-
-import static killrvideo.graph.KillrVideoTraversalConstants.VERTEX_USER;
-import static killrvideo.graph.KillrVideoTraversalConstants.VERTEX_VIDEO;
-import static killrvideo.graph.__.*;
-import static killrvideo.utils.ExceptionUtils.mergeStackTrace;
-
 @Service
-public class SuggestedVideosService extends AbstractSuggestedVideoService {
-
+//public class SuggestedVideosService extends AbstractSuggestedVideoService {
+public class SuggestedVideosService extends SuggestedVideoServiceImplBase {
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(SuggestedVideosService.class);
 
     @Inject

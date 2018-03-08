@@ -11,7 +11,12 @@ import com.datastax.driver.mapping.annotations.Table;
 import killrvideo.utils.TypeConverter;
 import killrvideo.video_catalog.VideoCatalogServiceOuterClass.VideoPreview;
 
-@Table(keyspace = Schema.KEYSPACE, name = "latest_videos")
+/**
+ * Pojo representing DTO for table 'latest_videos'
+ *
+ * @author DataStax evangelist team.
+ */
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_LATEST_VIDEOS)
 public class LatestVideos extends AbstractVideoList {
 
     /** Serial. */
@@ -23,15 +28,23 @@ public class LatestVideos extends AbstractVideoList {
     @Column
     private UUID userid;
 
-    public LatestVideos() {
-    }
+    /**
+     * Default constructor.
+     */
+    public LatestVideos() {}
 
+    /**
+     * Constructor with all parameters.
+     */
     public LatestVideos(String yyyymmdd, UUID userid, UUID videoid, String name, String previewImageLocation, Date addedDate) {
         super(name, previewImageLocation, addedDate, videoid);
         this.yyyymmdd = yyyymmdd;
         this.userid = userid;
     }
     
+    /**
+     * Mapping to GRPC generated classes.
+     */
     public VideoPreview toVideoPreview() {
         return VideoPreview
                 .newBuilder()

@@ -1,19 +1,26 @@
 package killrvideo.entity;
 
-import static killrvideo.entity.Schema.KEYSPACE;
-
+import java.io.Serializable;
 import java.util.UUID;
 
-import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.ClusteringColumn;
+import com.datastax.driver.mapping.annotations.Column;
 import com.datastax.driver.mapping.annotations.PartitionKey;
 import com.datastax.driver.mapping.annotations.Table;
 
 import killrvideo.ratings.RatingsServiceOuterClass.GetUserRatingResponse;
 import killrvideo.utils.TypeConverter;
 
-@Table(keyspace = KEYSPACE, name = "video_ratings_by_user")
-public class VideoRatingByUser {
+/**
+ * Pojo representing DTO for table 'video_ratings_by_user'.
+ *
+ * @author DataStax evangelist team.
+ */
+@Table(keyspace = Schema.KEYSPACE, name = Schema.TABLENAME_VIDEOS_RATINGS_BYUSER)
+public class VideoRatingByUser implements Serializable {
+
+    /** Serial. */
+    private static final long serialVersionUID = 7124040203261999049L;
 
     @PartitionKey
     private UUID videoid;
@@ -24,14 +31,23 @@ public class VideoRatingByUser {
     @Column
     private int rating;
 
+    /**
+     * Default constructor (reflection)
+     */
     public VideoRatingByUser() {}
 
+    /**
+     * Constructor with all parameters.
+     */
     public VideoRatingByUser(UUID videoid, UUID userid, int rating) {
         this.videoid = videoid;
         this.userid = userid;
         this.rating = rating;
     }
 
+    /**
+     * Mapping to generated GPRC beans.
+     */
     public GetUserRatingResponse toUserRatingResponse() {
         return GetUserRatingResponse
                 .newBuilder()

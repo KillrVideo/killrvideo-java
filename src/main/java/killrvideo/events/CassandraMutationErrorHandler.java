@@ -15,9 +15,15 @@ import com.google.common.eventbus.Subscribe;
 
 import killrvideo.configuration.KillrVideoConfiguration;
 
+/**
+ * Catch exceptions and create a {@link CassandraMutationError} in EventBus.
+ *
+ * @author DataStax evangelist team.
+ */
 @Component
 public class CassandraMutationErrorHandler {
 
+    /** LOGGER for the class. */
     private static Logger LOGGER = LoggerFactory.getLogger(CassandraMutationErrorHandler.class);
 
     @Inject
