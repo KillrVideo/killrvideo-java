@@ -4,9 +4,11 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -17,6 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.datastax.driver.core.AuthProvider;
+import com.datastax.driver.core.policies.AddressTranslator;
 import com.datastax.driver.dse.DseCluster.Builder;
 import com.datastax.driver.dse.DseSession;
 import com.datastax.driver.dse.auth.DsePlainTextAuthProvider;
@@ -99,7 +102,7 @@ public class DseConfiguration {
          
          return new CallExecutor<DseSession>(config)
                  .afterFailedTry(s -> { 
-                     LOGGER.info("Attempt #{}/{} failed.. trying in {} seconds.", atomicCount.getAndIncrement(),
+                     LOGGER.info("Attempt #{}/{} failed.. trying in {} seconds, waiting Dse to Start", atomicCount.getAndIncrement(),
                              maxNumberOfTries,  delayBetweenTries); })
                  .onFailure(s -> {
                      LOGGER.error("Cannot connection to DSE after {} attempts, exiting", maxNumberOfTries);
@@ -114,6 +117,8 @@ public class DseConfiguration {
     
     @Bean
     public MappingManager initializeMappingManager(DseSession session) {
+        // TODO on peut passer le keyspace en dynamique
+        // 
         return new MappingManager(session);
     }
 
@@ -123,18 +128,72 @@ public class DseConfiguration {
     }
     
     /**
-     * Retrieve server name from ETCD and update the contact points.
-     *
+     * Retrieve cluster nodes adresses (eg:node1:9042) from ETCD and initialize the `contact points`,
+     * endpoints of Cassandra cluster nodes.
+     * 
+     * @note 
+     * [Initializing Contact Points with Java Driver]
+     * 
+     * (1) The default port is 9042. If you keep using the default port you
+     * do not need to use or `withPort()` or `addContactPointsWithPorts()`, only `addContactPoint()`.
+     * 
+     * (2) Best practice is to use the SAME PORT for each node and to  setup the port through `withPort()`.
+     * 
+     * (3) Never, ever use `addContactPointsWithPorts` in clusters : it will ony set port FOR THE FIRST NODE. 
+     * DON'T USE, EVEN IF ALL NODE USE SAME PORT. It purpose is only for tests and standalone servers.
+     * 
+     * (4) What if I have a cluster and nodes do not use the same port (eg: node1:9043, node2:9044, node3:9045) ?
+     * You need to use {@link AddressTranslator} as defined below and reference with `withAddressTranslator(translator);`
+     * 
+     * <code>
+     * public class MyClusterAddressTranslator implements AddressTranslator {
+     *  @Override
+     *  public void init(Cluster cluster) {}
+     *  @Override
+     *  public void close() {}
+     *  
+     *  @Override
+     *  public InetSocketAddress translate(InetSocketAddress incoming) {
+     *     // Given the configuration
+     *     Map<String, Integer> clusterNodes = new HashMap<String, Integer>() { {
+     *       put("node1", 9043);put("node2", 9044);put("node3", 9045);
+     *      }};
+     *      String targetHostName = incoming.getHostName();
+     *      if (clusterNodes.containsKey(targetHostName)) {
+     *          return new InetSocketAddress(targetHostName, clusterNodes.get(targetHostName));
+     *      }
+     *      throw new IllegalArgumentException("Cannot translate URL " + incoming + " hostName not found");
+     *   }
+     * }
+     * </code>
+     * 
      * @param clusterConfig
      *      current configuration
      */
     private void populateContactPoints(Builder clusterConfig)  {
         try {
-            etcdClient.listDir("/killrvideo/services/cassandra")
+            // Convert as list of inetAdress removing invalid format
+            List < InetSocketAddress > clusterNodeAdresses = 
+                    etcdClient.listDir("/killrvideo/services/cassandra")
                       .stream()
-                      .forEach(node -> asSocketInetAdress(node.value)
-                      .ifPresent(clusterConfig::addContactPointsWithPorts));
-            clusterConfig.withClusterName(dseClusterName);
+                      .map(node -> this.asSocketInetAdress(node.value))
+                      .filter(node -> node.isPresent())
+                      .map(node -> node.get())
+                      .collect(Collectors.toList());
+
+            if (clusterNodeAdresses.isEmpty()) {
+                throw new IllegalStateException("Cannot find any valid contact points in ETCD, "
+                        + "please check key /killrvideo/services/cassandra");
+            }
+            
+            // Init port for all 
+            clusterConfig.withPort(clusterNodeAdresses.get(0).getPort());
+            
+            //Add allContact points
+            clusterNodeAdresses.stream()
+                      .map(adress -> adress.getHostName())
+                      .forEach(clusterConfig::addContactPoint);
+            
         } catch (EtcdClientException e) {
             /**
              * If ETCD is not setup yet we must retry.

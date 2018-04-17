@@ -24,6 +24,10 @@ killrvideo:
     timeout: 3000
     recommendation.name: killrvideo_video_recommendations
   
+  services:
+    comment:
+     async: true 
+    
   etcd:
     host: 10.0.75.1
     port: 2379

@@ -24,10 +24,10 @@ import com.google.common.eventbus.EventBus;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import killrvideo.dao.event.CassandraMutationError;
 import killrvideo.entity.Schema;
 import killrvideo.entity.VideoRating;
 import killrvideo.entity.VideoRatingByUser;
-import killrvideo.events.CassandraMutationError;
 import killrvideo.ratings.RatingsServiceGrpc.RatingsServiceImplBase;
 import killrvideo.ratings.RatingsServiceOuterClass.GetRatingRequest;
 import killrvideo.ratings.RatingsServiceOuterClass.GetRatingResponse;
@@ -66,7 +66,6 @@ public class RatingsService extends RatingsServiceImplBase {
 
     private String videoRatingsTableName;
     private PreparedStatement rateVideo_updateRatingPrepared;
-
 
     @PostConstruct
     public void init(){

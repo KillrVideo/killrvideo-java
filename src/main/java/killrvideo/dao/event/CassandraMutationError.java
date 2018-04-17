@@ -1,6 +1,4 @@
-package killrvideo.events;
-
-import com.google.protobuf.GeneratedMessageV3;
+package killrvideo.dao.event;
 
 import killrvideo.utils.ExceptionUtils;
 
@@ -14,7 +12,7 @@ public class CassandraMutationError {
     /**
      * Failed Protobuf requests.
      */
-    public final GeneratedMessageV3 request;
+    public final Object request;
     
     /**
      * Related exception in code.
@@ -24,7 +22,7 @@ public class CassandraMutationError {
     /**
      * Default constructor.
      */
-    public CassandraMutationError(GeneratedMessageV3 request, Throwable throwable) {
+    public CassandraMutationError(Object request, Throwable throwable) {
         this.request = request;
         this.throwable = throwable;
     }
@@ -34,9 +32,13 @@ public class CassandraMutationError {
      */
     public String buildErrorLog() {
         StringBuilder builder = new StringBuilder();
-        builder.append(request.toString()).append("\n");
-        builder.append(throwable.getMessage()).append("\n");
-        builder.append(ExceptionUtils.mergeStackTrace(throwable));
+        if (request != null) {
+            builder.append(request.toString()).append("\n");
+        }
+        if (throwable != null ) {
+            builder.append(throwable.getMessage()).append("\n");
+            builder.append(ExceptionUtils.mergeStackTrace(throwable));
+        }
         return builder.toString();
     }
 }

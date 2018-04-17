@@ -19,8 +19,7 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerServiceDefinition;
 import killrvideo.configuration.KillrVideoConfiguration;
-import killrvideo.events.CassandraMutationErrorHandler;
-import killrvideo.service.CommentService;
+import killrvideo.dao.event.CassandraMutationErrorHandler;
 import killrvideo.service.RatingsService;
 import killrvideo.service.SearchService;
 import killrvideo.service.StatisticsService;
@@ -53,7 +52,7 @@ public class GrpcServer {
     private EventBus eventBus;
     
     @Inject
-    private CommentService commentService;
+    private GrpcServiceComments commentService;
 
     @Inject
     private RatingsService ratingService;

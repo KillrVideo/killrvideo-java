@@ -2,12 +2,20 @@ package killrvideo.configuration;
 
 import javax.inject.Inject;
 
-import killrvideo.entity.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.datastax.driver.mapping.Mapper;
 import com.datastax.driver.mapping.MappingManager;
+
+import killrvideo.entity.LatestVideos;
+import killrvideo.entity.User;
+import killrvideo.entity.UserCredentials;
+import killrvideo.entity.UserVideos;
+import killrvideo.entity.Video;
+import killrvideo.entity.VideoPlaybackStats;
+import killrvideo.entity.VideoRating;
+import killrvideo.entity.VideoRatingByUser;
 
 /**
  * Setting up mapping between entities and Cassandra UDT.
@@ -23,16 +31,6 @@ public class DseMapperConfiguration {
     @Bean
     public Mapper<User> userMapper() {
         return manager.mapper(User.class);
-    }
-
-    @Bean
-    public Mapper<CommentsByUser> commentsByUserMapper() { 
-        return manager.mapper(CommentsByUser.class); 
-    }
-
-    @Bean
-    public Mapper< CommentsByVideo > commentsByVideoMapper() { 
-        return manager.mapper(CommentsByVideo.class); 
     }
 
     @Bean

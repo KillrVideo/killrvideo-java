@@ -1,4 +1,4 @@
-package killrvideo.events;
+package killrvideo.dao.event;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
