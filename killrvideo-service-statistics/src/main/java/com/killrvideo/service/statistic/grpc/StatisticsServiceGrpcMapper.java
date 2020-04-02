@@ -7,8 +7,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
+import com.killrvideo.grpc.GrpcMappingUtils;
 import com.killrvideo.service.statistic.dto.VideoPlaybackStats;
-import com.killrvideo.utils.GrpcMappingUtils;
 
 import killrvideo.common.CommonTypes.Uuid;
 import killrvideo.statistics.StatisticsServiceOuterClass.GetNumberOfPlaysRequest;

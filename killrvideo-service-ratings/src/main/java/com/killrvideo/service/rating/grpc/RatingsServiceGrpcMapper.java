@@ -1,11 +1,11 @@
 package com.killrvideo.service.rating.grpc;
 
-import static com.killrvideo.utils.GrpcMappingUtils.uuidToUuid;
+import static com.killrvideo.grpc.GrpcMappingUtils.uuidToUuid;
 
 import java.util.Optional;
 
-import com.killrvideo.service.rating.dto.VideoRating;
-import com.killrvideo.service.rating.dto.VideoRatingByUser;
+import com.killrvideo.service.rating.dto.VideoRatings;
+import com.killrvideo.service.rating.dto.VideoRatingsByUser;
 
 import killrvideo.ratings.RatingsServiceOuterClass.GetRatingResponse;
 import killrvideo.ratings.RatingsServiceOuterClass.GetUserRatingResponse;
@@ -26,7 +26,7 @@ public class RatingsServiceGrpcMapper {
    /**
      * Mapping to generated GPRC beans.
      */
-    public static GetRatingResponse maptoRatingResponse(VideoRating vr) {
+    public static GetRatingResponse maptoRatingResponse(VideoRatings vr) {
         return GetRatingResponse.newBuilder()
                 .setVideoId(uuidToUuid(vr.getVideoid()))
                 .setRatingsCount(Optional.ofNullable(vr.getRatingCounter()).orElse(0L))
@@ -37,7 +37,7 @@ public class RatingsServiceGrpcMapper {
     /**
      * Mapping to generated GPRC beans.
      */
-    public static GetUserRatingResponse maptoUserRatingResponse(VideoRatingByUser vr) {
+    public static GetUserRatingResponse maptoUserRatingResponse(VideoRatingsByUser vr) {
         return GetUserRatingResponse.newBuilder()
                 .setVideoId(uuidToUuid(vr.getVideoid()))
                 .setUserId(uuidToUuid(vr.getUserid()))

@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 import com.google.common.eventbus.EventBus;
-import com.killrvideo.conf.KillrVideoConfiguration;
 
 /**
  * Wrapping any kind of messages.
@@ -17,7 +16,7 @@ import com.killrvideo.conf.KillrVideoConfiguration;
  * @author DataStax Developer Advocates team.
  */
 @Repository("killrvideo.dao.messaging.memory")
-@Profile(KillrVideoConfiguration.PROFILE_MESSAGING_MEMORY)
+@Profile("messaging_memory")
 public class MessagingDaoInMemory implements MessagingDao {
     
     /** Loger for that class. */
@@ -30,7 +29,7 @@ public class MessagingDaoInMemory implements MessagingDao {
     @Override
     public CompletableFuture<Object> sendEvent(String targetDestination, Object event) {
         if (event != null) {
-            LOGGER.info("Publishing eventtype{} to destination {} ", event.getClass().getName(), targetDestination);
+            LOGGER.debug("Publishing '{}' to '{}' ", event.getClass().getSimpleName(), targetDestination);
             eventBus.post(event);
         }
         return CompletableFuture.supplyAsync(() -> { 

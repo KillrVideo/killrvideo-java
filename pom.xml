@@ -2,19 +2,13 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- ~ MVN Coordonates ~ -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.datastax</groupId>
 	<artifactId>killrvideo-parent</artifactId>
 	<name>KillrVideo</name>
 	<packaging>pom</packaging>
-	<version>3.0.0</version>
+	<version>3.1.0</version>
 
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- ~ OVERVIEW ~ -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<inceptionYear>2016</inceptionYear>
 	<url>https://killrvideo.github.io/</url>
 	<description>
@@ -22,10 +16,7 @@
      build applications with Apache Cassandra and DataStax Enterprise.
    </description>
 
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- ~ CHILDREN MODULES ~ -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<modules>
+   <modules>
 		<module>killrvideo-commons</module>
 		<module>killrvideo-service-comments</module>
 		<module>killrvideo-service-ratings</module>
@@ -36,126 +27,105 @@
 		<module>killrvideo-service-sugestedvideo</module>
 		<module>killrvideo-services</module>
 	</modules>
-
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- ~ PROPERTIES ~ -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+	
 	<properties>
-		
+
+		<java.version>11</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
 		<!-- DataStax Java-Driver -->
-		<dse.version>1.8.2</dse.version>
+		<cassandra-java-driver.version>4.5.1</cassandra-java-driver.version>
 		
 		<!-- Spring -->
-		<spring.version>5.1.4.RELEASE</spring.version>
-		<spring-boot.version>2.1.1.RELEASE</spring-boot.version>
+		<spring.version>5.1.9.RELEASE</spring.version>
+		<spring-boot.version>2.1.7.RELEASE</spring-boot.version>
 		
-   		<!-- Validation -->
-        <javax.el.api.version>3.0.0</javax.el.api.version>
-        <validator.version>6.0.11.Final</validator.version>
-        <validation.api.version>2.0.1.Final</validation.api.version>
-        
-		<!-- GRPC -->
-		<grpc.version>1.10.0</grpc.version>
-		<protobuf.version>3.5.1-1</protobuf.version>
-		<protobuf.java.version>3.5.1</protobuf.java.version>
-		<protoc-gen-grpc.version>1.10.0</protoc-gen-grpc.version>
-		<spring-boot-grpc.version>2.1.5</spring-boot-grpc.version>
+		<!-- Grpc -->
+		<grpc.version>1.23.0</grpc.version>
+		<protobuf.version>3.9.1</protobuf.version>
+		<guava.version>28.0-jre</guava.version>
 		
+		<!-- Test -->
+		<junit-jupiter.version>5.5.1</junit-jupiter.version>
+		<cucumber.version>1.2.5</cucumber.version>
+		<assertj.version>3.13.2</assertj.version>
+		<testcontainers.version>1.12.0</testcontainers.version>
+
+		<!-- Validation -->
+		<javax.el.api.version>3.0.0</javax.el.api.version>
+		<validator.version>6.0.11.Final</validator.version>
+		<validation.api.version>2.0.1.Final</validation.api.version>
+
 		<!-- kafka -->
 		<kafka-connect.version>2.1.0</kafka-connect.version>
-
-		<!-- Test -->
-		<cassandra-unit.version>3.3.0.2</cassandra-unit.version>
-		<cassandra-all.version>3.11.2</cassandra-all.version>
-		<junit4.version>4.12</junit4.version>
-		<junit-platform.version>1.2.0</junit-platform.version>
-		<junit-jupiter.version>5.2.0</junit-jupiter.version>
-		<cucumber.version>1.2.5</cucumber.version>
+		
+		<!-- Utilities -->
+		<logback.version>1.2.3</logback.version>
 		<mockito.version>1.9.5</mockito.version>
-        <assertj-core.version>1.7.0</assertj-core.version>
-        
-        <!-- Utilities -->
-        <commons.lang3.version>3.7</commons.lang3.version>
+		<retry4j.version>0.14.0</retry4j.version>
+		<commons.lang3.version>3.7</commons.lang3.version>
 		<commons-codec.version>1.11</commons-codec.version>
 		<commons-collections.version>4.1</commons-collections.version>
-		<logback.version>1.2.3</logback.version>
-		<etcd4j.version>1.2</etcd4j.version>
-		<retry4j.version>0.14.0</retry4j.version>
-		<guava.version>19.0</guava.version>
-		<camel-spring-boot.version>2.21.0</camel-spring-boot.version>
-		<ff4j.version>1.7.1</ff4j.version>
 		<netty.version>4.1.23.Final</netty.version>
-        
-		<!-- Maven -->
-		<java.version>11</java.version>
-		
-		<!-- Docker -->
 		<docker.image.prefix>killrvideo</docker.image.prefix>
+		
+		<!-- Maven -->
+		<maven-os-plugin.version>1.6.2</maven-os-plugin.version>
+		<maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
+		<maven-protobuf-plugin.version>0.6.1</maven-protobuf-plugin.version>
+		<maven-build-helper-plugin.version>3.0.0</maven-build-helper-plugin.version>
+		<maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+		<maven-failsafe-plugin.version>2.22.2</maven-failsafe-plugin.version>
 		<maven-docker-plugin.version>1.4.10</maven-docker-plugin.version>
 		
-		<build-helper-maven-plugin.version>3.0.0</build-helper-maven-plugin.version>
-		<cassandra-maven-plugin.version>3.5</cassandra-maven-plugin.version>
-		<maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
-		<maven-surefire-plugin.version>2.22.0</maven-surefire-plugin.version>
-		<maven-os-plugin.version>1.5.0.Final</maven-os-plugin.version>
-		<protobuf-maven-plugin.version>0.5.0</protobuf-maven-plugin.version>
-
 	</properties>
 
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- ~ DEPENDENCIES ~ -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<dependencyManagement>
 		<dependencies>
 
-			<!-- Java driver for DSE -->
+			<!-- Merge Drivers -->
 			<dependency>
-				<groupId>com.datastax.dse</groupId>
-				<artifactId>dse-java-driver-core</artifactId>
-				<version>${dse.version}</version>
+				<groupId>com.datastax.oss</groupId>
+				<artifactId>java-driver-core</artifactId>
+				<version>${cassandra-java-driver.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.datastax.dse</groupId>
-				<artifactId>dse-java-driver-mapping</artifactId>
-				<version>${dse.version}</version>
+				<groupId>com.datastax.oss</groupId>
+				<artifactId>java-driver-query-builder</artifactId>
+				<version>${cassandra-java-driver.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.datastax.dse</groupId>
-				<artifactId>dse-java-driver-extras</artifactId>
-				<version>${dse.version}</version>
+				<groupId>com.datastax.oss</groupId>
+				<artifactId>java-driver-mapper-runtime</artifactId>
+				<version>${cassandra-java-driver.version}</version>
+			</dependency>
+			
+			<!-- Bean Validation -->
+			<dependency>
+				<groupId>javax.validation</groupId>
+				<artifactId>validation-api</artifactId>
+				<version>${validation.api.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.datastax.dse</groupId>
-				<artifactId>dse-java-driver-graph</artifactId>
-				<version>${dse.version}</version>
+				<groupId>org.hibernate</groupId>
+				<artifactId>hibernate-validator</artifactId>
+				<version>${validator.version}</version>
 			</dependency>
-	 		
-	 		<!-- Bean Validation -->
-	        <dependency>
-	            <groupId>javax.validation</groupId>
-	            <artifactId>validation-api</artifactId>
-	            <version>${validation.api.version}</version>
-	        </dependency>
-	        <dependency>
-	            <groupId>org.hibernate</groupId>
-	            <artifactId>hibernate-validator</artifactId>
-	            <version>${validator.version}</version>
-	        </dependency>
-	        <dependency>
-	            <groupId>org.hibernate.validator</groupId>
-	            <artifactId>hibernate-validator</artifactId>
-	            <version>${validator.version}</version>
-	        </dependency>
-	         <dependency>
-	   		   <groupId>org.glassfish</groupId>
-	   		   <artifactId>javax.el</artifactId>
-	   		   <version>${javax.el.api.version}</version>
-		   </dependency>
-	        <dependency>
-	            <groupId>javax.el</groupId>
-	            <artifactId>javax.el-api</artifactId>
-	            <version>${javax.el.api.version}</version>
-	        </dependency>
+			<dependency>
+				<groupId>org.hibernate.validator</groupId>
+				<artifactId>hibernate-validator</artifactId>
+				<version>${validator.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.glassfish</groupId>
+				<artifactId>javax.el</artifactId>
+				<version>${javax.el.api.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>javax.el</groupId>
+				<artifactId>javax.el-api</artifactId>
+				<version>${javax.el.api.version}</version>
+			</dependency>
 
 			<!-- GRPC -->
 			<dependency>
@@ -166,8 +136,9 @@
 			<dependency>
 				<groupId>com.google.protobuf</groupId>
 				<artifactId>protobuf-java</artifactId>
-				<version>${protobuf.java.version}</version>
+				<version>${protobuf.version}</version>
 			</dependency>
+
 			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-lang3</artifactId>
@@ -183,7 +154,7 @@
 				<artifactId>commons-collections4</artifactId>
 				<version>${commons-collections.version}</version>
 			</dependency>
-		
+
 			<!-- Kafka -->
 			<dependency>
 				<groupId>org.apache.kafka</groupId>
@@ -196,18 +167,6 @@
 				<version>${kafka-connect.version}</version>
 			</dependency>
 
-			<!-- ETCD Service Discovery -->
-			<dependency>
-				<groupId>com.xqbase</groupId>
-				<artifactId>etcd4j</artifactId>
-				<version>${etcd4j.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>com.google.guava</groupId>
-						<artifactId>guava</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
 
 			<!-- Spring* -->
 			<dependency>
@@ -257,83 +216,38 @@
 				<version>${logback.version}</version>
 			</dependency>
 			
-			<!-- Tests -->
 			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>${junit4.version}</version>
+			   <groupId>org.junit.jupiter</groupId>
+			   <artifactId>junit-jupiter</artifactId>
+			   <version>${junit-jupiter.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.springframework</groupId>
-				<artifactId>spring-test</artifactId>
-				<version>${spring.version}</version>
+			  <groupId>org.testcontainers</groupId>
+			  <artifactId>testcontainers</artifactId>
+			  <version>${testcontainers.version}</version>
+		    </dependency>
+		    <dependency>
+				<groupId>org.assertj</groupId>
+				<artifactId>assertj-core</artifactId>
+				<version>${assertj.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>info.cukes</groupId>
+				<artifactId>cucumber-java</artifactId>
+				<version>${cucumber.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>info.cukes</groupId>
+				<artifactId>cucumber-spring</artifactId>
+				<version>${cucumber.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>info.cukes</groupId>
+				<artifactId>cucumber-junit</artifactId>
+				<version>${cucumber.version}</version>
 			</dependency>
 			
-			<!-- Cassandra Unit -->
-			<dependency>
-				<groupId>org.cassandraunit</groupId>
-				<artifactId>cassandra-unit</artifactId>
-				<version>${cassandra-unit.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.cassandra</groupId>
-				<artifactId>cassandra-all</artifactId>
-				<version>${cassandra-all.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.cassandraunit</groupId>
-				<artifactId>cassandra-unit-spring</artifactId>
-				<version>${cassandra-unit.version}</version>
-			</dependency>
-			<!-- Junit 5 -->
-			<dependency>
-				<groupId>org.junit.platform</groupId>
-				<artifactId>junit-platform-launcher</artifactId>
-				<version>${junit-platform.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.junit.platform</groupId>
-				<artifactId>junit-platform-runner</artifactId>
-				<version>${junit-platform.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.junit.platform</groupId>
-				<artifactId>junit-platform-console-standalone</artifactId>
-				<version>${junit-platform.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.junit.jupiter</groupId>
-				<artifactId>junit-jupiter-engine</artifactId>
-				<version>${junit-jupiter.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.junit.jupiter</groupId>
-				<artifactId>junit-jupiter-params</artifactId>
-				<version>${junit-jupiter.version}</version>
-			</dependency>
-			<!-- Cuncumber -->
-			<dependency>
-            	<groupId>info.cukes</groupId>
-            	<artifactId>cucumber-java</artifactId>
-	            <version>${cucumber.version}</version>
-	        </dependency>
-	        <dependency>
-	            <groupId>info.cukes</groupId>
-	            <artifactId>cucumber-spring</artifactId>
-	            <version>${cucumber.version}</version>
-	            <scope>test</scope>
-	        </dependency>
-	        <dependency>
-	            <groupId>info.cukes</groupId>
-	            <artifactId>cucumber-junit</artifactId>
-	            <version>${cucumber.version}</version>
-	        </dependency>
-        	<dependency>
-            	<groupId>org.assertj</groupId>
-            	<artifactId>assertj-core</artifactId>
-            	<version>${assertj-core.version}</version>
-        	</dependency>
-
 			<!-- Extra Libs -->
 			<dependency>
 				<groupId>com.evanlennick</groupId>
@@ -346,19 +260,9 @@
 				<version>${guava.version}</version>
 			</dependency>
 			<dependency>
-               <groupId>org.ff4j</groupId>
-               <artifactId>ff4j-core</artifactId>
-               <version>${ff4j.version}</version>
-            </dependency>
-            <dependency>
-               <groupId>org.ff4j</groupId>
-               <artifactId>ff4j-web</artifactId>
-               <version>${ff4j.version}</version>
-            </dependency>
-          	<dependency>
-			    <groupId>io.netty</groupId>
-			    <artifactId>netty-all</artifactId>
-			    <version>${netty.version}</version>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-all</artifactId>
+				<version>${netty.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -385,67 +289,73 @@
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>${maven-compiler-plugin.version}</version>
 					<configuration>
-						<forceJavacCompilerUse>true</forceJavacCompilerUse>
-					    <release>${java.version}</release>
+						<release>${java.version}</release>
 						<source>${java.version}</source>
 						<target>${java.version}</target>
+						<annotationProcessorPaths>
+							<path>
+								<groupId>com.datastax.oss</groupId>
+								<artifactId>java-driver-mapper-processor</artifactId>
+								<version>${cassandra-java-driver.version}</version>
+							</path>
+						</annotationProcessorPaths>
 					</configuration>
-					<dependencies>
-				      <dependency>
-				        <groupId>org.ow2.asm</groupId>
-				        <artifactId>asm</artifactId>
-				        <version>6.2</version>
-				      </dependency>
-				    </dependencies>
 				</plugin>
-
 				<plugin>
-					<groupId>org.codehaus.mojo</groupId>
-					<artifactId>cassandra-maven-plugin</artifactId>
-					<version>${cassandra-maven-plugin.version}</version>
-					<executions>
-						<execution>
-							<goals>
-								<goal>start</goal>
-								<goal>flush</goal>
-								<goal>cleanup</goal>
-							</goals>
-							<phase>compile</phase>
-						</execution>
-					</executions>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>${maven-surefire-plugin.version}</version>
 				</plugin>
-				
 				<plugin>
-			    	<groupId>org.apache.maven.plugins</groupId>
-            	  	<artifactId>maven-surefire-plugin</artifactId>
-            	  	<version>${maven-surefire-plugin.version}</version>
-            	  	<dependencies>
-	                   <dependency>
-	                    <groupId>org.junit.platform</groupId>
-	                    <artifactId>junit-platform-surefire-provider</artifactId>
-	                    <version>${junit-platform.version}</version>
-	                  </dependency>
-	                   <dependency>
-	                    <groupId>org.junit.jupiter</groupId>
-	                    <artifactId>junit-jupiter-engine</artifactId>
-	                    <version>${junit-jupiter.version}</version>
-	                </dependency>
-	                 <dependency>
-           				<groupId>org.ow2.asm</groupId>
-            			<artifactId>asm</artifactId>
-            			<version>6.2</version>
-        			 </dependency>
-            	  </dependencies>
-        	   </plugin>
-        
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-failsafe-plugin</artifactId>
+					<version>${maven-failsafe-plugin.version}</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
+		<plugins>
+			<!-- Add GRPC Sources -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>${maven-build-helper-plugin.version}</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>target/generated-sources/protobuf/java</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.xolstice.maven.plugins</groupId>
+				<artifactId>protobuf-maven-plugin</artifactId>
+				<version>${maven-protobuf-plugin.version}</version>
+				<configuration>
+					<protoSourceRoot>${basedir}/src/main/resources/proto</protoSourceRoot>
+					<protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
+					<pluginId>grpc-java</pluginId>
+					<pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>compile</goal>
+							<goal>compile-custom</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- ~ LICENSE (APACHE2) ~ -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<licenses>
 		<license>
 			<name>Apache 2</name>
@@ -454,13 +364,9 @@
 		</license>
 	</licenses>
 
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- ~ ORGANIZATION ~ -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
 	<organization>
 		<name>DataStax</name>
 		<url>https://datastax.com/</url>
 	</organization>
-
 
 </project>

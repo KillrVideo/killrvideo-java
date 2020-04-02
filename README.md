@@ -7,18 +7,6 @@
 A reference application for Java developers looking to learn more about using [Apache Cassandra][cassandra] and
 [DataStax Enterprise][dse] in their applications and services. Learn more at [Killrvideo].
 
-## The latest stable build of KillrVideo Java is [v2.1.0][v2.1.0]. Master is experimental. Please use v2.1.0 if you attempting to follow the instructions in the links below.
-
-## Building Locally
-
-**Docker Way**
-
-`docker run -v ${PWD}:/opt/killrvideo-java -w /opt/killrvideo-java maven mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B`
-
-**Maven Way**
-
-`mvn install`
-
 ## Running Locally
 
 Use these guides to get started running KillrVideo locally on your development machine:
@@ -35,7 +23,7 @@ that you don't see in the code currently, send me a message [@SonicDMG][twitter]
 [here][issues] on GitHub.
 
 ## License
-Copyright 2018 David Gilardi, Cedrick Lunven, derived from original work by Duy Hai Doan
+Copyright 2018 David Gilardi, Cedrick Lunven, Aleksandr Volochnev derived from original work by Duy Hai Doan
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

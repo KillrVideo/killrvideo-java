@@ -3,8 +3,8 @@ package com.killrvideo.service.user.grpc;
 import java.util.Date;
 import java.util.UUID;
 
+import com.killrvideo.grpc.GrpcMappingUtils;
 import com.killrvideo.service.user.dto.User;
-import com.killrvideo.utils.GrpcMappingUtils;
 
 import killrvideo.user_management.UserManagementServiceOuterClass.CreateUserRequest;
 import killrvideo.user_management.UserManagementServiceOuterClass.UserProfile;
@@ -13,7 +13,7 @@ import killrvideo.user_management.UserManagementServiceOuterClass.VerifyCredenti
 /**
  * Mapping from interfaces GRPC to DTO
  *
- * @author Cedrick LUNVEN (@clunven)
+ * @author DataStax advocates Team
  */
 public class UserManagementServiceGrpcMapper {
     

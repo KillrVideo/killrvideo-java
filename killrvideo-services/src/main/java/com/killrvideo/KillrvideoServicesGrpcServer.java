@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.killrvideo.conf.KillrVideoConfiguration;
-import com.killrvideo.discovery.ServiceDiscoveryDao;
 import com.killrvideo.service.comment.grpc.CommentsServiceGrpc;
 import com.killrvideo.service.rating.grpc.RatingsServiceGrpc;
 import com.killrvideo.service.search.grpc.SearchServiceGrpc;
@@ -37,54 +35,60 @@ public class KillrvideoServicesGrpcServer {
     @Value("${killrvideo.grpc-server.port: 50101}")
     private int grpcPort;
     
-    /** Connectivity to ETCD Service discovery. */
-    @Autowired
-    private KillrVideoConfiguration config;
-    
-    /** Connectivity to ETCD Service discovery. */
-    @Autowired
-    private ServiceDiscoveryDao serviceDiscoveryDao;
+    // --- Comment ---
     
     @Autowired
     private CommentsServiceGrpc commentService;
     
-    @Value("${killrvideo.services.comment: true}")
+    @Value("${killrvideo.grpc-server.services.comment: true}")
     private boolean commentServiceEnabled = true;
+    
+    // --- Rating ---
     
     @Autowired
     private RatingsServiceGrpc ratingService;
     
-    @Value("${killrvideo.services.rating: true}")
+    @Value("${killrvideo.grpc-server.services.rating: true}")
     private boolean ratingServiceEnabled = true;
+    
+    // --- Search ---
     
     @Autowired
     private SearchServiceGrpc searchService;
     
-    @Value("${killrvideo.services.search: true}")
+    @Value("${killrvideo.grpc-server.services.search: true}")
     private boolean searchServiceEnabled = true;
     
+    // --- Statistics ---
+      
     @Autowired
     private StatisticsServiceGrpc statisticsService;
     
-    @Value("${killrvideo.services.statistic: true}")
+    @Value("${killrvideo.grpc-server.services.statistic: true}")
     private boolean statisticServiceEnabled = true;
+    
+    // --- Video ---
     
     @Autowired
     private VideoCatalogServiceGrpc videoCatalogService;
  
-    @Value("${killrvideo.services.videoCatalog: true}")
+    @Value("${killrvideo.grpc-server.services.videoCatalog: true}")
     private boolean videoCatalogServiceEnabled = true;
+    
+    // --- User ---
     
     @Autowired
     private UserManagementServiceGrpc userService;
     
-    @Value("${killrvideo.services.user: true}")
+    @Value("${killrvideo.grpc-server.services.user: true}")
     private boolean userServiceEnabled = true;
+
+    // --- Suggestion ---
     
     @Autowired
     private SuggestedVideosServiceGrpc suggestedVideosService;
     
-    @Value("${killrvideo.services.suggestedVideo: true}")
+    @Value("${killrvideo.grpc-server.services.suggestedVideo: true}")
     private boolean suggestedVideoServiceEnabled = true;
   
     /**
@@ -94,29 +98,34 @@ public class KillrvideoServicesGrpcServer {
     
     @PostConstruct
     public void start() throws Exception {
-        LOGGER.info("Initializing Grpc Server...");
-        
-        // Create GRPC server referencing only enabled services
+        LOGGER.info("Starting Grpc Server...");
         ServerBuilder<?> builder = ServerBuilder.forPort(grpcPort);
         if (commentServiceEnabled) {
+            LOGGER.info(" + Enabling service 'Comment'...");
             builder.addService(this.commentService.bindService());
         }
         if (ratingServiceEnabled) {
+            LOGGER.info(" + Enabling service 'Rating'...");
             builder.addService(this.ratingService.bindService());
         }
         if (searchServiceEnabled) {
+            LOGGER.info(" + Enabling service 'Search'...");
             builder.addService(this.searchService.bindService());
         }
         if (statisticServiceEnabled) {
+            LOGGER.info(" + Enabling service 'Statistics'...");
             builder.addService(this.statisticsService.bindService());
         }
         if (videoCatalogServiceEnabled) {
+            LOGGER.info(" + Enabling service 'VideoCatalog'...");
             builder.addService(this.videoCatalogService.bindService());
         }
         if (suggestedVideoServiceEnabled) {
+            LOGGER.info(" + Enabling service 'SuggestedVideo'...");
             builder.addService(this.suggestedVideosService.bindService());
         }
         if (userServiceEnabled) {
+            LOGGER.info(" + Enabling Service 'User'");
             builder.addService(this.userService.bindService());
         }
         grpcServer = builder.build();
@@ -127,110 +136,15 @@ public class KillrvideoServicesGrpcServer {
                 stopGrpcServer();
             }
         });
-
         // Start Grpc listener
         grpcServer.start();
         LOGGER.info("[OK] Grpc Server started on port: '{}'", grpcPort);
-        registerServices();
     }
     
     @PreDestroy
     public void stopGrpcServer() {
         LOGGER.info("Calling shutdown for GrpcServer");
         grpcServer.shutdown();
-        unRegisterServices();
-    }
-    
-    /**
-     * Registering Services to Service Discovery : - ETCD if needed - do nothing with Kubernetes
-     */
-    private void registerServices() {
-        if (commentServiceEnabled) {
-            serviceDiscoveryDao.register(
-                    this.commentService.getServiceKey(), 
-                    config.getApplicationHost(), 
-                    grpcPort);
-        }
-        if (ratingServiceEnabled) {
-            serviceDiscoveryDao.register(
-                    this.ratingService.getServiceKey(), 
-                    config.getApplicationHost(), 
-                    grpcPort);
-        }
-        if (searchServiceEnabled) {
-            serviceDiscoveryDao.register(
-                    this.searchService.getServiceKey(), 
-                    config.getApplicationHost(), 
-                    grpcPort);
-        }
-        if (statisticServiceEnabled) {
-            serviceDiscoveryDao.register(
-                    this.statisticsService.getServiceKey(),
-                    config.getApplicationHost(),
-                    grpcPort);
-        }
-        if (videoCatalogServiceEnabled) {
-            serviceDiscoveryDao.register(
-                    this.videoCatalogService.getServiceKey(),
-                    config.getApplicationHost(),
-                    grpcPort);
-        }
-        if (suggestedVideoServiceEnabled) {
-            serviceDiscoveryDao.register(
-                    this.suggestedVideosService.getServiceKey(),
-                    config.getApplicationHost(), 
-                    grpcPort);
-        }
-        if (userServiceEnabled) {
-            serviceDiscoveryDao.register(
-                    this.userService.getServiceKey(),
-                    config.getApplicationHost(),
-                    grpcPort);
-        }
-    }
-    
-    private void unRegisterServices() {
-        if (commentServiceEnabled) {
-            serviceDiscoveryDao.unregisterEndpoint(
-                    this.commentService.getServiceKey(),
-                    config.getApplicationHost(), 
-                    grpcPort);
-        }
-        if (ratingServiceEnabled) {
-            serviceDiscoveryDao.unregisterEndpoint(
-                    this.ratingService.getServiceKey(),
-                    config.getApplicationHost(), 
-                    grpcPort);
-        }
-        if (searchServiceEnabled) {
-            serviceDiscoveryDao.unregisterEndpoint(
-                    this.searchService.getServiceKey(),
-                    config.getApplicationHost(), grpcPort);
-        }
-        if (statisticServiceEnabled) {
-            serviceDiscoveryDao.unregisterEndpoint(
-                    this.statisticsService.getServiceKey(),
-                    config.getApplicationHost(), 
-                    grpcPort);
-        }
-        if (videoCatalogServiceEnabled) {
-            serviceDiscoveryDao.unregisterEndpoint(
-                    this.videoCatalogService.getServiceKey(), 
-                    config.getApplicationHost(), 
-                    grpcPort);
-        }
-        if (suggestedVideoServiceEnabled) {
-            serviceDiscoveryDao.unregisterEndpoint(
-                    this.suggestedVideosService.getServiceKey(),
-                    config.getApplicationHost(), 
-                    grpcPort);
-        }
-        if (userServiceEnabled) {
-            serviceDiscoveryDao.unregisterEndpoint(
-                    this.userService.getServiceKey(),
-                    config.getApplicationHost(), 
-                    grpcPort);
-        }
     }
     
 }

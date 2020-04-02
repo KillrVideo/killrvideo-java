@@ -1,6 +1,7 @@
 package com.killrvideo.messaging.dao;
 
-import java.io.FileNotFoundException;
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.annotation.PostConstruct;
@@ -26,13 +27,17 @@ public class ErrorProcessor {
     /** LOGGER for the class. */
     private static Logger LOGGER = LoggerFactory.getLogger(ErrorProcessor.class);
     
-    @Value("${killrvideo.cassandra.mutation-error-log: /tmp/killrvideo-mutation-errors.log}")
+    @Value("${killrvideo.dse.mutation-error-log:/tmp/killrvideo-mutation-errors.log}")
     private String mutationErrorLog;
     
     private PrintWriter errorLogFile;
 
     @PostConstruct
-    public void openErrorLogFile() throws FileNotFoundException {
+    public void openErrorLogFile() throws IOException {
+        File logFile = new File(getMutationErrorLog());
+        if (!logFile.exists()) {
+            logFile.createNewFile();
+        }
         this.errorLogFile = new PrintWriter(getMutationErrorLog());
     }
 

@@ -1,13 +1,18 @@
 package com.killrvideo.service.video.grpc;
 
-import static com.killrvideo.utils.GrpcMappingUtils.dateToTimestamp;
-import static com.killrvideo.utils.GrpcMappingUtils.uuidToUuid;
+import static com.killrvideo.grpc.GrpcMappingUtils.instantToTimeStamp;
+import static com.killrvideo.grpc.GrpcMappingUtils.uuidToUuid;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import com.google.common.collect.Sets;
+import com.killrvideo.dse.dao.DseSchema;
+import com.killrvideo.dse.dto.CustomPagingState;
 import com.killrvideo.dse.dto.Video;
 import com.killrvideo.service.video.dto.LatestVideo;
 import com.killrvideo.service.video.dto.LatestVideosPage;
@@ -47,13 +52,17 @@ public class VideoCatalogServiceGrpcMapper {
      * Mapping to GRPC generated classes.
      */
     public static VideoPreview mapLatestVideotoVideoPreview(LatestVideo lv) {
-        return VideoPreview.newBuilder()
-                .setAddedDate(dateToTimestamp(lv.getAddedDate()))
+        VideoPreview.Builder builder = VideoPreview.newBuilder()
+                .setAddedDate(instantToTimeStamp(lv.getAddedDate()))
                 .setName(lv.getName())
-                .setPreviewImageLocation(Optional.ofNullable(lv.getPreviewImageLocation()).orElse("N/A"))
-                .setUserId(uuidToUuid(lv.getUserid()))
-                .setVideoId(uuidToUuid(lv.getVideoid()))
-                .build();
+                .setPreviewImageLocation(Optional.ofNullable(lv.getPreviewImageLocation()).orElse("N/A"));
+        if (null != lv.getUserid()) {
+            builder.setUserId(uuidToUuid(lv.getUserid()));
+        }
+        if (null != lv.getVideoid()) {
+            builder.setVideoId(uuidToUuid(lv.getVideoid()));
+        }
+        return builder.build();
     }
     
     public static GetLatestVideoPreviewsResponse mapLatestVideoToGrpcResponse(LatestVideosPage returnedPage) {
@@ -71,7 +80,7 @@ public class VideoCatalogServiceGrpcMapper {
      */
     public static VideoPreview mapFromVideotoVideoPreview(Video v) {
         return VideoPreview.newBuilder()
-                .setAddedDate(dateToTimestamp(v.getAddedDate()))
+                .setAddedDate(instantToTimeStamp(v.getAddedDate()))
                 .setName(v.getName())
                 .setPreviewImageLocation(Optional.ofNullable(v.getPreviewImageLocation()).orElse("N/A"))
                 .setUserId(uuidToUuid(v.getUserid()))
@@ -84,7 +93,7 @@ public class VideoCatalogServiceGrpcMapper {
      */
     public static VideoPreview mapFromUserVideotoVideoPreview(UserVideo v) {
         return VideoPreview.newBuilder()
-                .setAddedDate(dateToTimestamp(v.getAddedDate()))
+                .setAddedDate(instantToTimeStamp(v.getAddedDate()))
                 .setName(v.getName())
                 .setPreviewImageLocation(Optional.ofNullable(v.getPreviewImageLocation()).orElse("N/A"))
                 .setUserId(uuidToUuid(v.getUserid()))
@@ -97,7 +106,7 @@ public class VideoCatalogServiceGrpcMapper {
      */
     public static GetVideoResponse mapFromVideotoVideoResponse(Video v) {
         return GetVideoResponse.newBuilder()
-                .setAddedDate(dateToTimestamp(v.getAddedDate()))
+                .setAddedDate(instantToTimeStamp(v.getAddedDate()))
                 .setDescription(v.getDescription())
                 .setLocation(v.getLocation())
                 .setLocationType(VideoLocationType.forNumber(v.getLocationType()))
@@ -106,6 +115,21 @@ public class VideoCatalogServiceGrpcMapper {
                 .setVideoId(uuidToUuid(v.getVideoid()))
                 .addAllTags(v.getTags())
                 .build();
+    }
+    
+    /**
+     * Build the first paging state if one does not already exist and return an object containing 3 elements
+     * representing the initial state (List<String>, Integer, String).
+     * @return CustomPagingState
+     */
+    public static CustomPagingState buildFirstCustomPagingState() {
+        return new CustomPagingState()
+                .currentBucket(0)
+                .cassandraPagingState(null)
+                .listOfBuckets(LongStream.rangeClosed(0L, 7L).boxed()
+                        .map(Instant.now().atZone(ZoneId.systemDefault())::minusDays)
+                        .map(x -> x.format(DseSchema.DATEFORMATTER))
+                        .collect(Collectors.toList()));
     }
 
    

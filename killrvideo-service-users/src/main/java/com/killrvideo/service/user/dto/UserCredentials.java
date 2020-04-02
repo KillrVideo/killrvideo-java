@@ -3,43 +3,22 @@ package com.killrvideo.service.user.dto;
 import java.io.Serializable;
 import java.util.UUID;
 
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.validator.constraints.Length;
-
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
-import com.killrvideo.model.CommonConstants;
-import com.killrvideo.service.user.dao.UserDseDao;
+import com.killrvideo.dse.dao.DseSchema;
 
 /**
  * Pojo representing DTO for table 'user_credentials'
  *
  * @author DataStax Developer Advocates team.
  */
-@Table(keyspace = 
-        CommonConstants.KILLRVIDEO_KEYSPACE, 
-       name = UserDseDao.TABLENAME_USER_CREDENTIALS)
-public class UserCredentials implements Serializable {
+public class UserCredentials implements DseSchema, Serializable {
 
     /** Serial. */
     private static final long serialVersionUID = 2013590265131367178L;
-    
-    /** Column names in the DB. */
-    public static final String COLUMN_USERID    = "userid";
-    public static final String COLUMN_PASSWORD  = "password";
-    public static final String COLUMN_EMAIL     = "email";
 
-    @PartitionKey
     private String email;
 
-    @Length(min = 1, message = "password must not be empty")
-    @Column(name = COLUMN_PASSWORD)
     private String password;
 
-    @NotNull
-    @Column
     private UUID userid;
 
     /**

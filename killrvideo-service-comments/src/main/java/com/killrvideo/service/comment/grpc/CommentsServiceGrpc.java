@@ -11,20 +11,25 @@ import static java.util.UUID.fromString;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.CompletableFuture;
+
+import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.killrvideo.grpc.GrpcMappingUtils;
 import com.killrvideo.messaging.dao.MessagingDao;
 import com.killrvideo.service.comment.dao.CommentDseDao;
-import com.killrvideo.service.comment.dto.Comment;
-import com.killrvideo.service.comment.dto.QueryCommentByUser;
-import com.killrvideo.service.comment.dto.QueryCommentByVideo;
-import com.killrvideo.utils.GrpcMappingUtils;
+import com.killrvideo.service.comment.dao.CommentDseDaoMapperBuilder;
+import com.killrvideo.service.comment.dao.dto.Comment;
+import com.killrvideo.service.comment.grpc.dto.QueryCommentByUser;
+import com.killrvideo.service.comment.grpc.dto.QueryCommentByVideo;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -49,17 +54,25 @@ public class CommentsServiceGrpc extends CommentsServiceImplBase {
     private static Logger LOGGER = LoggerFactory.getLogger(CommentsServiceGrpc.class);
     
     /** Communications and queries to DSE (Comment). */
-    @Autowired
     private CommentDseDao dseCommentDao;
+   
+    @Autowired
+    private CqlSession cqlSession;
+    
+    @Autowired
+    @Qualifier("killrvideo.keyspace")
+    private CqlIdentifier dseKeySpace;
     
     @Autowired
     private MessagingDao messagingDao;
-    
-    @Value("${killrvideo.discovery.services.comment : CommentsService}")
-    private String serviceKey;
   
-    @Value("${killrvideo.messaging.destinations.commentCreated : topic-kv-commentCreation}")
+    @Value("${killrvideo.kafka.destinations.commentCreated : topic-kv-commentCreation}")
     private String messageDestination;
+    
+    @PostConstruct
+    public void init() {
+        dseCommentDao = new CommentDseDaoMapperBuilder(cqlSession).build().commentDao(dseKeySpace);
+    }
     
     /** {@inheritDoc} */
     @Override
@@ -81,19 +94,15 @@ public class CommentsServiceGrpc extends CommentsServiceImplBase {
             LOGGER.debug("Insert comment on video {} for user {} : {}",  q.getVideoid(), q.getUserid(), q);
         }
         
-        CompletableFuture<Void> futureDse = dseCommentDao.insertCommentAsync(q);
-        
-        // If OK, then send Message to Kafka
-        CompletableFuture<Object> futureDseThensKafka = futureDse.thenCompose(rs -> {
-            return messagingDao.sendEvent(messageDestination, UserCommentedOnVideo.newBuilder()
-                    .setCommentId(grpcReq.getCommentId())
-                    .setVideoId(grpcReq.getVideoId())
-                    .setUserId(grpcReq.getUserId())
-                    .setCommentTimestamp(GrpcMappingUtils.instantToTimeStamp(Instant.now()))
-                    .build());
-        });
-        
-        futureDseThensKafka.whenComplete((result, error) -> {
+        dseCommentDao.upsertAsync(q)
+                     .thenApply(rs -> {
+                    return messagingDao.sendEvent(messageDestination, UserCommentedOnVideo.newBuilder()
+                            .setCommentId(grpcReq.getCommentId())
+                            .setVideoId(grpcReq.getVideoId())
+                            .setUserId(grpcReq.getUserId())
+                            .setCommentTimestamp(GrpcMappingUtils.instantToTimeStamp(Instant.now()))
+                            .build());
+                }).whenComplete((result, error) -> {
             if (error != null ) {
                 traceError("commentOnVideo", starts, error);
                 grpcResObserver.onError(Status.INTERNAL.withCause(error).asRuntimeException());
@@ -119,14 +128,14 @@ public class CommentsServiceGrpc extends CommentsServiceImplBase {
         QueryCommentByVideo query = mapFromGrpcVideoCommentToDseQuery(grpcReq);
              
         // ASYNCHRONOUS works with ComputableFuture
-        dseCommentDao.findCommentsByVideosIdAsync(query).whenComplete((result, error) -> {
+        dseCommentDao.findCommentsByVideoIdAsync(query).whenComplete((result, error) -> {
             if (result != null) {
                 traceSuccess( "getVideoComments", starts);
                 responseObserver.onNext(mapFromDseVideoCommentToGrpcResponse(result));
                 responseObserver.onCompleted();
             } else if (error != null){
                 traceError("getVideoComments", starts, error);
-                messagingDao.sendErrorEvent(getServiceKey(), error);
+                messagingDao.sendErrorEvent("CommentService", error);
                 responseObserver.onError(error);
             }
         });
@@ -156,7 +165,7 @@ public class CommentsServiceGrpc extends CommentsServiceImplBase {
                 responseObserver.onCompleted();
             } else if (error != null){
                 traceError("getUserComments", starts, error);
-                messagingDao.sendErrorEvent(getServiceKey(), error);
+                messagingDao.sendErrorEvent("CommentService", error);
                 responseObserver.onError(error);
             }
         });
@@ -186,16 +195,6 @@ public class CommentsServiceGrpc extends CommentsServiceImplBase {
      */
     private void traceError(String method, Instant starts, Throwable t) {
         LOGGER.error("An error occured in {} after {}", method, Duration.between(starts, Instant.now()), t);
-    }
-
-    /**
-     * Getter accessor for attribute 'serviceKey'.
-     *
-     * @return
-     *       current value of 'serviceKey'
-     */
-    public String getServiceKey() {
-        return serviceKey;
     }
 
 }

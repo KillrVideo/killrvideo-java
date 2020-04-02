@@ -19,6 +19,6 @@ services:
       memlock: -1
 
   dse-config: 
-    image: killrvideo/killrvideo-dse-config:3.0.0
+    image: killrvideo/killrvideo-dse-config:3
     depends_on:
       - dse

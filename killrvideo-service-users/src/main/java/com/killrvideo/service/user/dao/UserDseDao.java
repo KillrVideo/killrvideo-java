@@ -1,173 +1,190 @@
 package com.killrvideo.service.user.dao;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import javax.annotation.PostConstruct;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Repository;
-
-import com.datastax.driver.core.BoundStatement;
-import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.RegularStatement;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Statement;
-import com.datastax.driver.core.querybuilder.QueryBuilder;
-import com.datastax.driver.dse.DseSession;
-import com.datastax.driver.mapping.Mapper;
-import com.datastax.driver.mapping.Result;
-import com.killrvideo.dse.dao.DseDaoSupport;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.AsyncResultSet;
+import com.datastax.oss.driver.api.core.cql.ResultSet;
+import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.killrvideo.service.user.dto.User;
 import com.killrvideo.service.user.dto.UserCredentials;
-import com.killrvideo.utils.FutureUtils;
 
 /**
- * Handling user.
+ * Implementation of User Operation in {@link UserDseDao} for bootcamp:
+ * 
+ * KISS:
+ * - Using SimpleStatement Only
+ * - Avoiding PrepareStatement
+ * - Avoiding QueryBuilder to ensure same code as other languages
+ * - Avoiding Dao and Mapper with Bean
  *
- * @author DataStax Developer Advocates Team
+ * @author DataStax Developer Advocates team.
+ * @author DataStax Curriculum team.
  */
-@Repository
-public class UserDseDao extends DseDaoSupport {
-
-    /** Logger for DAO. */
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserDseDao.class);
+public class UserDseDao {
     
-    /** Data model constants. */
-    public static final String TABLENAME_USERS                         = "users";
-    public static final String TABLENAME_USER_CREDENTIALS              = "user_credentials";
+    public static final String COLUMN_USERID       = "userid";
+    public static final String COLUMN_LASTNAME     = "lastname";
+    public static final String COLUMN_FIRSTNAME    = "firstname";
+    public static final String COLUMN_EMAIL        = "email";
+    public static final String COLUMN_CREATED_DATE = "userid";
+    public static final String COLUMN_PASSWORD     = "created_date";
     
-    /** Mapper to ease queries. */
-    protected Mapper < User >             mapperUsers;
-    protected Mapper < UserCredentials >  mapperUserCredentials;
+    /** Connectivity to Cassandra/DSE. */
+    private CqlSession cqlSession;
     
-    /** Precompile statements to speed up queries. */
-    private PreparedStatement insertCredentialsStatement;
-    private PreparedStatement insertUserStatement;
-    private PreparedStatement findUsersByIdsStatement;
-   
+    /** Constructor for the class, providing Session */
+    public UserDseDao(CqlSession cqlSession) {
+        this.cqlSession   = cqlSession;
+    }
+    
     /**
-     * Default constructor.
+     * EXERCICE #1
+     * 
+     * Retrieving a record in table 'user_credentials' based on primary key 'email'
+     * 
+     * @param email
+     *      value for the pk
+     * @return
+     *      expected statement
      */
-    public UserDseDao() {
-        super();
+    private SimpleStatement createStatemenToFindUserCredentials(String email) {
+        return SimpleStatement.builder("select * from user_credentials where email=?")
+                              .addPositionalValues(email).build();
     }
     
     /**
-     * Allow explicit intialization for test purpose.
+     * EXERCICE #2
+     * 
+     * Create a statement to insert record into table 'user_credentials'
+     * 
+     * @param userid
+     *      user unique identifier
+     * @param email
+     *      user email adress (PK)
+     * @param password
+     *      user encoded password
+     * @return
+     *      expected statement
      */
-    public UserDseDao(DseSession dseSession) {
-        super(dseSession);
-    }
-    
-    /** {@inheritDoc} */
-    @PostConstruct
-    protected void initialize () {
-        
-        // Mapping Bean to tables
-        mapperUsers            = mappingManager.mapper(User.class);
-        mapperUserCredentials  = mappingManager.mapper(UserCredentials.class);
-        
-        // Create User Credentials
-        RegularStatement stmt = QueryBuilder.insertInto(
-                mapperUserCredentials.getTableMetadata().getKeyspace().getName(), 
-                mapperUserCredentials.getTableMetadata().getName())
-            .value(UserCredentials.COLUMN_EMAIL, QueryBuilder.bindMarker())
-            .value(UserCredentials.COLUMN_PASSWORD, QueryBuilder.bindMarker())
-            .value(UserCredentials.COLUMN_USERID, QueryBuilder.bindMarker())
-            .ifNotExists();
-        insertCredentialsStatement = dseSession.prepare(stmt);
-        insertCredentialsStatement.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
-        
-        // Create User
-        RegularStatement stmt2 =  QueryBuilder.insertInto(
-                mapperUsers.getTableMetadata().getKeyspace().getName(), 
-                mapperUsers.getTableMetadata().getName())
-                .value(User.COLUMN_USERID,    QueryBuilder.bindMarker())
-                .value(User.COLUMN_FIRSTNAME, QueryBuilder.bindMarker())
-                .value(User.COLUMN_LASTNAME,  QueryBuilder.bindMarker())
-                .value(User.COLUMN_EMAIL, QueryBuilder.bindMarker())
-                .value(User.COLUMN_CREATE, QueryBuilder.bindMarker())
-                .ifNotExists(); // use lightweight transaction
-        insertUserStatement = dseSession.prepare(stmt2);
-        insertUserStatement.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
-        
-        // Find User profiles
-        RegularStatement stmt3 =  QueryBuilder.select().all()
-                .from(mapperUsers.getTableMetadata().getKeyspace().getName(), 
-                      mapperUsers.getTableMetadata().getName())
-                .where(QueryBuilder.in(User.COLUMN_USERID, QueryBuilder.bindMarker()));
-        findUsersByIdsStatement = dseSession.prepare(stmt3);
-        findUsersByIdsStatement.setConsistencyLevel(ConsistencyLevel.LOCAL_QUORUM);
+    private SimpleStatement createStatementToInsertUserCredentials(UUID userid, String email, String password) {
+        return SimpleStatement.builder(""
+             + "INSERT INTO user_credentials (userid,email,\"password\") "
+             + "VALUES (?,?,?) IF NOT EXISTS")
+                            .addPositionalValues(userid, email, password)
+                            .build();
     }
     
     /**
-     * Create user Asynchronously composing things. (with Mappers)
+     * EXERCICE #3
+     * 
+     * Create a statement to insert record into table 'users'
      * 
      * @param user
-     *      user Management
-     * @param hashedPassword
-     *      hashed Password
+     *      Java object wrapping all expected properties
+     * @param password
+     *      user encoded password
      * @return
+     *      expected statement
      */
-    public CompletableFuture<Void> createUserAsync(User user, String hashedPassword) {
+    private SimpleStatement createStatementToInserUser(User user) {
+        return SimpleStatement
+                .builder("INSERT INTO users (userid,firstname,lastname,email,created_date) "
+                        + "VALUES (?,?,?,?,?) "
+                        + "IF NOT EXISTS")
+                .addPositionalValues(
+                        user.getUserid(), user.getFirstname(), user.getLastname(), 
+                        user.getEmail(), Instant.now())
+                .build();
+    }
+    
+    /**
+     * EXERCICE #4
+     * 
+     * Create a statement search for users based on their uniau user identifier (PK)
+     * 
+     * @param listOfUserIds
+     *     enumeration of searched user identifiers
+     * @return
+     *      expected statement
+     */
+    private SimpleStatement createStatementToSearchUsers(List<UUID> listOfUserIds) {
+        return SimpleStatement
+                .builder("SELECT * FROM users WHERE userid IN ?")
+                .addPositionalValues(listOfUserIds)
+                .build();
+    }
+    
+    /* Execute Synchronously */
+    public UserCredentials getUserCredential(String email) {
+        ResultSet rs  = cqlSession.execute(createStatemenToFindUserCredentials(email));
+        Row       row = rs.one(); // Request with Pk ensure unicity
+        return mapAsUserCredential(row);                                             
+    }
+    
+    /* Execute ASynchronously */
+    public CompletionStage<UserCredentials> getUserCredentialAsync(String email) {
+        return cqlSession.executeAsync(createStatemenToFindUserCredentials(email))
+                         .thenApply(AsyncResultSet::one)
+                         .thenApply(this::mapAsUserCredential);
+    }
+
+    /** {@inheritDoc} */
+    public CompletionStage<Void> createUserAsync(User user, String hashedPassword) {
         
-        String errMsg = String.format("Exception creating user because it already exists with email %s", user.getEmail());
+        CompletionStage<AsyncResultSet> resultInsertCredentials = cqlSession.executeAsync(
+                createStatementToInsertUserCredentials(user.getUserid(), user.getEmail(), hashedPassword));
         
-        final BoundStatement insertCredentialsQuery = insertCredentialsStatement.bind()
-                .setString(UserCredentials.COLUMN_EMAIL, user.getEmail())
-                .setString(UserCredentials.COLUMN_PASSWORD, hashedPassword)
-                .setUUID(UserCredentials.COLUMN_USERID, user.getUserid());
-        
-        // Create Record in user_Credentials if not already exist
-        CompletableFuture<ResultSet> future1 = FutureUtils.asCompletableFuture(dseSession.executeAsync(insertCredentialsQuery)); 
-        
-        // Execute user creation only if credentials did no exist
-        CompletableFuture<ResultSet> future2 = future1.thenCompose(rs -> {
-            if (rs != null && rs.wasApplied()) {
-                final BoundStatement insertUserQuery = insertUserStatement.bind()
-                                .setUUID(User.COLUMN_USERID, user.getUserid())
-                                .setString(User.COLUMN_FIRSTNAME, user.getFirstname()).setString(User.COLUMN_LASTNAME, user.getLastname())
-                                .setString(User.COLUMN_EMAIL, user.getEmail()).setTimestamp(User.COLUMN_CREATE, new Date());
-                    return FutureUtils.asCompletableFuture(dseSession.executeAsync(insertUserQuery));
-            }
-            return future1;
+        CompletionStage<AsyncResultSet> resultInsertUser = resultInsertCredentials.thenCompose(rs -> {
+          if (rs != null && rs.wasApplied()) {
+              return cqlSession.executeAsync(createStatementToInserUser(user));
+          }
+          return resultInsertCredentials;
         });
 
-        /**
-         * ThenAccept in the same thread pool (not using thenAcceptAsync())
-         */
-        return future2.thenAccept(rs -> {
+        return resultInsertUser.thenAccept(rs -> {
             if (rs != null && !rs.wasApplied()) {
-                LOGGER.error(errMsg);
+                String errMsg = "Exception creating user because it already exists";
                 throw new CompletionException(errMsg, new IllegalArgumentException(errMsg));
             }
         });
     }
 
-    /**
-     * Get user Credentials 
-     * @param email
-     * @return
-     */
-    public CompletableFuture< UserCredentials > getUserCredentialAsync(String email) {
-        return FutureUtils.asCompletableFuture(mapperUserCredentials.getAsync(email));
+    /** {@inheritDoc} */
+    public CompletionStage<List<User>> getUserProfilesAsync(List<UUID> userids) {
+        return cqlSession.executeAsync(createStatementToSearchUsers(userids))
+                .thenApply(AsyncResultSet::currentPage)
+                .thenApply(rowList -> StreamSupport
+                    .stream(rowList.spliterator(), false)
+                    .filter(Objects::nonNull)
+                    .map(this::mapAsUser)
+                    .collect(Collectors.toList()));
     }
     
-    /**
-     * Retrieve user profiles.
-     *
-     * @param userids
-     * @return
-     */
-    public CompletableFuture < List < User > > getUserProfilesAsync(List < UUID > userids) {
-        Statement stmt = findUsersByIdsStatement.bind().setList(0, userids, UUID.class);
-        return FutureUtils.asCompletableFuture(mapperUsers.mapAsync(dseSession.executeAsync(stmt))).thenApply(Result::all);
+    /* Map from Row to expected Bean */
+    protected UserCredentials mapAsUserCredential(Row row) {
+        return new UserCredentials(
+                row.getString("email"),
+                row.getString("password"),
+                row.getUuid("userid"));
     }
-       
+    
+    protected User mapAsUser(Row row) {
+        return new User(
+                row.getUuid(COLUMN_USERID),
+                row.getString("firstname"),
+                row.getString("lastname"),
+                row.getString("email"), 
+                Date.from(row.getInstant("created_date")));
+    }
+    
 }

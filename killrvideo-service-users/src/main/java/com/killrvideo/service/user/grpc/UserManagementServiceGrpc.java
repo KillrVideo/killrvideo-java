@@ -11,20 +11,23 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+
+import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.protobuf.Timestamp;
 import com.killrvideo.messaging.dao.MessagingDao;
 import com.killrvideo.service.user.dao.UserDseDao;
 import com.killrvideo.service.user.dto.User;
-import com.killrvideo.service.user.dto.UserCredentials;
 import com.killrvideo.utils.HashUtils;
 
 import io.grpc.Status;
@@ -49,17 +52,26 @@ public class UserManagementServiceGrpc extends UserManagementServiceImplBase {
     /** Loger for that class. */
     private static Logger LOGGER = LoggerFactory.getLogger(UserManagementServiceGrpc.class);
     
-    @Value("${killrvideo.messaging.destinations.userCreated : topic-kv-userCreation}")
-    private String topicUserCreated;
-    
-    @Value("${killrvideo.discovery.services.user : UserManagementService}")
-    private String serviceKey;
-    
-    @Autowired
+    /** Service Definition for Users. */
     private UserDseDao userDseDao;
     
     @Autowired
+    private CqlSession cqlSession;
+    
+    @Autowired
+    @Qualifier("killrvideo.keyspace")
+    private CqlIdentifier dseKeySpace;
+    
+    @Autowired
     private MessagingDao messagingDao;
+    
+    @Value("${killrvideo.messaging.destinations.userCreated : topic-kv-userCreation}")
+    private String topicUserCreated;
+    
+    @PostConstruct
+    public void init() {
+        userDseDao = new UserDseDao(cqlSession);
+    }
     
      /** {@inheritDoc} */
     @Override
@@ -112,11 +124,8 @@ public class UserManagementServiceGrpc extends UserManagementServiceImplBase {
         // Mapping GRPC => Domain (Dao)
         String email = grpcReq.getEmail();
         
-        // Invoke Async
-        CompletableFuture<UserCredentials> futureCredential = userDseDao.getUserCredentialAsync(email);
-        
         // Map back as GRPC (if correct invalid credential otherwize)
-        futureCredential.whenComplete((credential, error) -> {
+        userDseDao.getUserCredentialAsync(email).whenComplete((credential, error) -> {
             if (error != null ) {
                 traceError("verifyCredentials", starts, error);
                 if (!HashUtils.isPasswordValid(grpcReq.getPassword(), credential.getPassword())) {
@@ -162,11 +171,8 @@ public class UserManagementServiceGrpc extends UserManagementServiceImplBase {
                     .map(uuid -> UUID.fromString(uuid.getValue()))
                     .toArray(size -> new UUID[size]));
             
-            // Execute Async
-            CompletableFuture<List<User>> userListFuture = userDseDao.getUserProfilesAsync(listOfUserId);
-            
             // Mapping back to GRPC objects
-            userListFuture.whenComplete((users, error) -> {
+            userDseDao.getUserProfilesAsync(listOfUserId).whenComplete((users, error) -> {
                 if (error != null ) {
                     traceError("getUserProfile", starts, error);
                     grpcResObserver.onError(Status.INTERNAL.withCause(error).asRuntimeException());
@@ -206,15 +212,5 @@ public class UserManagementServiceGrpc extends UserManagementServiceImplBase {
      */
     private void traceError(String method, Instant starts, Throwable t) {
         LOGGER.error("An error occured in {} after {}", method, Duration.between(starts, Instant.now()), t);
-    }
-
-    /**
-     * Getter accessor for attribute 'serviceKey'.
-     *
-     * @return
-     *       current value of 'serviceKey'
-     */
-    public String getServiceKey() {
-        return serviceKey;
     }
 }
