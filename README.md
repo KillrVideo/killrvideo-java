@@ -1,3 +1,12 @@
+# THIS PROJECT IS NO LONGER ACTIVE! #
+
+Please direct your inquiries to [Killrvideo-2025](https://github.com/KillrVideo/killrvideo-java-2025)
+
+
+## DEPRECATED! - DEPRECATED! - DEPRECATED! ##
+
+...
+
 # KillrVideo Java #
 
 [![License Apache2](https://img.shields.io/hexpm/l/plug.svg)](http://www.apache.org/licenses/LICENSE-2.0)
