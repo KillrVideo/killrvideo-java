@@ -8,7 +8,7 @@ import com.datastax.driver.mapping.annotations.Column;
 import com.killrvideo.dse.dto.AbstractVideo;
 
 /**
- * Pojo representing multiple videso.
+ * Pojo representing multiple videos.
  *
  * @author DataStax Developer Advocates team.
  */
