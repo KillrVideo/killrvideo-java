@@ -4,6 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 
+/**
+ * Main
+ */
 @ComponentScan(basePackages="com.killrvideo")
 @EnableAutoConfiguration
 public class KillrVideoServices {
@@ -12,8 +15,7 @@ public class KillrVideoServices {
      * As SpringBoot application, this is the "main" class
      */
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(KillrVideoServices.class);
-        app.run(args);
+        new SpringApplication(KillrVideoServices.class).run(args);
     }
     
 }

@@ -13,6 +13,11 @@ import killrvideo.statistics.StatisticsServiceOuterClass.RecordPlaybackStartedRe
 import static com.killrvideo.utils.ValidationUtils.initErrorString;
 import static com.killrvideo.utils.ValidationUtils.validate;
 
+/**
+ * Check parameters in Statistics GRPC Microservice
+ *
+ * @author DataStax Developer Advocates team.
+ */
 public class StatisticsServiceGrpcValidator {
 
     /**

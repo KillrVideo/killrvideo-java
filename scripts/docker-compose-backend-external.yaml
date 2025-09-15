@@ -16,21 +16,11 @@ services:
       KILLRVIDEO_LOGGING_LEVEL: debug # More logging
     extra_hosts:
       - backend:$KILLRVIDEO_BACKEND
-
-  # Datastax Studio provides convenient web interface to work directly with DataStax Enterprise
-  studio:  
-    image: datastax/dse-studio:6.7.0
-    ports:
-      - "9091:9091" # Exposes port to be available externally
-    depends_on:
-      - dse # Needs DSE to be running
-    environment:
-      DS_LICENSE: accept
-
+  
   # DataStax Enterprise Database
   dse: 
-    image: datastax/dse-server:6.7.0
-    command: [ -s -g ] # Run with Search and Graph capabilities enabled
+    image: datastax/dse-server:6.7.7
+    command: [ -s -g] # Run with Search and Graph capabilities enabled
     ports: # Exposes ports to be available.
       - "9042:9042" # Exposes DSE port
       - "8983:8983" # Exposes DSE Search port
@@ -51,8 +41,9 @@ services:
   # Sample Data Generator, imitates behaviour of users on the killrVideo website. 
   # Adds comments and rates videos, upload new videos and so on.
   generator: 
-    image: killrvideo/killrvideo-generator:3.0.1
+    image: killrvideo/killrvideo-generator:3.0.2
     environment:
       KILLRVIDEO_LOGGING_LEVEL: debug # More logging
+      KILLRVIDEO_YOUTUBE_API_KEY: ${KILLRVIDEO_YOUTUBE_API_KEY}
     extra_hosts:
       - backend:$KILLRVIDEO_BACKEND

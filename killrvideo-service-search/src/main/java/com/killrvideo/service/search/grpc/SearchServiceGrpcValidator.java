@@ -11,6 +11,11 @@ import io.grpc.stub.StreamObserver;
 import killrvideo.search.SearchServiceOuterClass.GetQuerySuggestionsRequest;
 import killrvideo.search.SearchServiceOuterClass.SearchVideosRequest;
 
+/**
+ * Check parameters in Search GRPC Service.
+ *
+ * @author DataStax Developer Advocates team.
+ */
 public class SearchServiceGrpcValidator  {
 
     /**

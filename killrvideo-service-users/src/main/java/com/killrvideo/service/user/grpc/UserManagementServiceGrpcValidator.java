@@ -17,7 +17,7 @@ import static com.killrvideo.utils.ValidationUtils.validate;
 /**
  * Validate GRPC parameters.
  *
- * @author Cedrick LUNVEN (@clunven)
+ * @author DataStax advocates Team
  */
 public class UserManagementServiceGrpcValidator {
     

@@ -1,15 +1,15 @@
 package com.killrvideo.dse.dto;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-import com.datastax.driver.core.PagingState;
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.mapping.Mapper;
-import com.datastax.driver.mapping.Result;
+import com.datastax.oss.driver.api.core.MappedAsyncPagingIterable;
+import com.datastax.oss.driver.api.core.PagingIterable;
+import com.datastax.oss.protocol.internal.util.Bytes;
 
 /**
  * Ease usage of the paginState.
@@ -37,29 +37,30 @@ public class ResultListPage < ENTITY > {
      * @param mapper
      *      mapper
      */
-    public ResultListPage(Result<ENTITY> rs) {
+    public ResultListPage(PagingIterable<ENTITY> rs) {
         if (null != rs) {
             Iterator<ENTITY> iterResults = rs.iterator();
-            // rs.getAvailableWithoutFetching() all to parse only current page without fecthing all
             IntStream.range(0, rs.getAvailableWithoutFetching())
                      .forEach(item -> listOfResults.add(iterResults.next()));
-            nextPage = Optional.ofNullable(rs.getExecutionInfo().getPagingState())
-                               .map(PagingState::toString);
+            if (null != rs.getExecutionInfo().getPagingState()) {
+                ByteBuffer pagingState = rs.getExecutionInfo().getPagingState();
+                if (pagingState != null && pagingState.hasArray()) {
+                    nextPage = Optional.ofNullable(Bytes.toHexString(pagingState));
+                }
+            }
         }
     }
     
-	/**
-	 * Constructor with mapper.
-	 *
-	 * @param rs
-	 * 		result set
-	 * @param mapper
-	 * 		mapper
-	 */
-	public ResultListPage(ResultSet rs, Mapper<ENTITY> mapper) {
-		this(mapper.map(rs));
-	}
-	
+    public ResultListPage(MappedAsyncPagingIterable<ENTITY> rs) {
+        if (null != rs) {
+           rs.currentPage().forEach(listOfResults::add);
+           ByteBuffer pagingState = rs.getExecutionInfo().getPagingState();
+           if (pagingState != null && pagingState.hasArray()) {
+               nextPage = Optional.ofNullable(Bytes.toHexString(pagingState));
+           }
+        }
+    }
+    
 	/** {@inheritDoc} */
 	@Override
 	public String toString() {

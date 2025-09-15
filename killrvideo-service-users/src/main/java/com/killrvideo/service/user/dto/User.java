@@ -1,52 +1,29 @@
 package com.killrvideo.service.user.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
-import javax.validation.constraints.NotNull;
-
-import org.hibernate.validator.constraints.Length;
-
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
-import com.killrvideo.model.CommonConstants;
-import com.killrvideo.service.user.dao.UserDseDao;
+import com.killrvideo.dse.dao.DseSchema;
 
 /**
  * Pojo representing DTO for table 'users'.
  *
  * @author DataStax Developer Advocates team.
  */
-@Table(keyspace = 
-            CommonConstants.KILLRVIDEO_KEYSPACE,
-       name = UserDseDao.TABLENAME_USERS)
-public class User {
+public class User implements DseSchema, Serializable {
 
-    /** Column names in the DB. */
-    public static final String COLUMN_USERID    = "userid";
-    public static final String COLUMN_FIRSTNAME = "firstname";
-    public static final String COLUMN_LASTNAME  = "lastname";
-    public static final String COLUMN_EMAIL     = "email";
-    public static final String COLUMN_CREATE    = "created_date";
-
-    @PartitionKey
+    /** Serial. */
+    private static final long serialVersionUID = 1916681315036907552L;
+    
     private UUID userid;
 
-    @Length(min = 1, message = "firstName must not be empty")
-    @Column
     private String firstname;
 
-    @Length(min = 1, message = "lastname must not be empty")
-    @Column
     private String lastname;
 
-    @Length(min = 1, message = "email must not be empty")
-    @Column
     private String email;
 
-    @NotNull
-    @Column(name = COLUMN_CREATE)
     private Date createdAt;
 
     /**

@@ -6,37 +6,37 @@
       "defaultValue": "Killrvideo"
     },
     {
-      "name": "killrvideo.services.comment",
+      "name": "killrvideo.grpc-server.services.comment",
       "type": "java.lang.Boolean",
       "defaultValue": "true"
     },
     {
-      "name": "killrvideo.services.rating",
+      "name": "killrvideo.grpc-server.services.rating",
       "type": "java.lang.Boolean",
       "defaultValue": "true"
     },
     {
-      "name": "killrvideo.services.search",
+      "name": "killrvideo.grpc-server.services.search",
       "type": "java.lang.Boolean",
       "defaultValue": "true"
     },
     {
-      "name": "killrvideo.services.statistic",
+      "name": "killrvideo.grpc-server.services.statistic",
       "type": "java.lang.Boolean",
       "defaultValue": "true"
     },
     {
-      "name": "killrvideo.services.videoCatalog",
+      "name": "killrvideo.grpc-server.services.videoCatalog",
       "type": "java.lang.Boolean",
       "defaultValue": "true"
     },
     {
-      "name": "killrvideo.services.user",
+      "name": "killrvideo.grpc-server.services.user",
       "type": "java.lang.Boolean",
       "defaultValue": "true"
     },
     {
-      "name": "killrvideo.services.suggestedVideo",
+      "name": "killrvideo.grpc-server.services.suggestedVideo",
       "type": "java.lang.Boolean",
       "defaultValue": "true"
     },
@@ -46,82 +46,135 @@
       "defaultValue": "8899"
     },
     {
-      "name": "killrvideo.cassandra.clustername",
+      "name": "killrvideo.dse.contactPoints",
+      "type": "java.lang.String",
+      "defaultValue": "dse"
+    },
+    {
+      "name": "killrvideo.dse.port",
+      "type": "java.lang.Integer",
+      "defaultValue": "9042"
+    },
+    {
+      "name": "killrvideo.dse.localdc",
+      "type": "java.lang.String",
+      "defaultValue": "dc1"
+    },
+    {
+      "name": "killrvideo.dse.keyspace",
       "type": "java.lang.String",
       "defaultValue": "killrvideo"
     },
     {
-      "name": "killrvideo.cassandra.mutation-error-log",
+      "name": "killrvideo.dse.username",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "killrvideo.dse.password",
+      "type": "java.lang.String"
+    },
+    {
+      "name": "killrvideo.dse.consistency",
+      "type": "java.lang.String",
+      "defaultValue": "LOCAL_QUORUM"
+    },
+    {
+      "name": "killrvideo.dse.timeout",
+      "type": "java.lang.String",
+      "defaultValue": "5 seconds"
+    },
+    {
+      "name": "killrvideo.dse.mutation-error-log",
       "type": "java.lang.String",
       "defaultValue": "error-.log"
     },
     {
-      "name": "killrvideo.cassandra.maxNumberOfTries",
+      "name": "killrvideo.dse.maxNumberOfTries",
       "type": "java.lang.Integer",
       "defaultValue": "10"
     },
     {
-      "name": "killrvideo.cassandra.delayBetweenTries",
+      "name": "killrvideo.dse.delayBetweenTries",
       "type": "java.lang.Integer",
       "defaultValue": "2"
     },
     {
-      "name": "killrvideo.ssl.enable",
+      "name": "killrvideo.dse.ssl.enable",
       "type": "java.lang.Boolean",
       "defaultValue": "false"
     },
     {
-      "name": "killrvideo.ssl.CACertFileLocation",
+      "name": "killrvideo.dse.ssl.CACertFileLocation",
       "type": "java.lang.String",
       "defaultValue": "cassandra.cert"
     },
     {
-      "name": "killrvideo.search.ignoredWords",
+      "name": "killrvideo.dse.search.ignoredWords",
       "type": "java.lang.String",
       "defaultValue": ""
     },
     {
-      "name": "killrvideo.graph.timeout",
+      "name": "killrvideo.dse.search.timeout",
+      "type": "java.lang.String",
+      "defaultValue": "5 seconds"
+    },
+    {
+      "name": "killrvideo.dse.search.consistency",
+      "type": "java.lang.String",
+      "defaultValue": "LOCAL_ONE"
+    },
+    {
+      "name": "killrvideo.dse.graph.timeout",
+      "type": "java.lang.String",
+      "defaultValue": "5 seconds"
+    },
+    {
+      "name": "killrvideo.dse.graph.recommendation.name",
+      "type": "java.lang.String",
+      "defaultValue": ""
+    },
+    {
+      "name": "killrvideo.kafka.destinations.errors",
+      "type": "java.lang.String",
+      "defaultValue": ""
+    },
+    {
+      "name": "killrvideo.kafka.destinations.videoRated",
+      "type": "java.lang.String",
+      "defaultValue": ""
+    },
+    {
+      "name": "killrvideo.kafka.destinations.commentCreated",
+      "type": "java.lang.String",
+      "defaultValue": ""
+    },
+    {
+      "name": "killrvideo.kafka.destinations.userCreated",
+      "type": "java.lang.String",
+      "defaultValue": ""
+    },
+    {
+      "name": "killrvideo.kafka.destinations.youTubeVideoAdded",
+      "type": "java.lang.String",
+      "defaultValue": ""
+    },
+     {
+      "name": "killrvideo.kafka.brokers",
+      "type": "java.lang.String",
+      "defaultValue": "kafka"
+    },
+     {
+      "name": "killrvideo.kafka.port",
       "type": "java.lang.Integer",
-      "defaultValue": "8899"
+      "defaultValue": "8082"
     },
     {
-      "name": "killrvideo.graph.recommendation.name",
-      "type": "java.lang.String",
-      "defaultValue": ""
-    },
-    {
-      "name": "killrvideo.messaging.destinations.errors",
-      "type": "java.lang.String",
-      "defaultValue": ""
-    },
-    {
-      "name": "killrvideo.messaging.destinations.videoRated",
-      "type": "java.lang.String",
-      "defaultValue": ""
-    },
-    {
-      "name": "killrvideo.messaging.destinations.commentCreated",
-      "type": "java.lang.String",
-      "defaultValue": ""
-    },
-    {
-      "name": "killrvideo.messaging.destinations.userCreated",
-      "type": "java.lang.String",
-      "defaultValue": ""
-    },
-    {
-      "name": "killrvideo.messaging.destinations.youTubeVideoAdded",
-      "type": "java.lang.String",
-      "defaultValue": ""
-    },
-    {
-      "name": "killrvideo.messaging.kafka.ack",
+      "name": "killrvideo.kafka.ack",
       "type": "java.lang.Integer",
       "defaultValue": "1"
     },
     {
-      "name": "killrvideo.messaging.kafka.consumerGroup",
+      "name": "killrvideo.kafka.consumerGroup",
       "type": "java.lang.String",
       "defaultValue": ""
     },
@@ -146,44 +199,29 @@
       "defaultValue": "1"
     },
     {
-      "name": "killrvideo.discovery.services",
+      "name": "killrvideo.apollo.override-local-dse",
+      "type": "java.lang.Boolean",
+      "defaultValue": "false"
+    },
+    {
+      "name": "killrvideo.apollo.username",
       "type": "java.lang.String",
-      "defaultValue": ""
+      "defaultValue": "cassandra"
     },
     {
-      "name": "killrvideo.discovery.etcd.host",
+      "name": "killrvideo.apollo.password",
       "type": "java.lang.String",
-      "defaultValue": ""
+      "defaultValue": "cassandra"
     },
     {
-      "name": "killrvideo.discovery.etcd.port",
-      "type": "java.lang.Integer",
-      "defaultValue": ""
-    },
-    {
-      "name": "killrvideo.discovery.etcd.maxNumberOfTries",
-      "type": "java.lang.Integer",
-      "defaultValue": ""
-    },
-    {
-      "name": "killrvideo.discovery.static.kafka.brokers",
+      "name": "killrvideo.apollo.keyspace",
       "type": "java.lang.String",
-      "defaultValue": ""
+      "defaultValue": "killrvideo"
     },
     {
-      "name": "killrvideo.discovery.static.kafka.port",
-      "type": "java.lang.Integer",
-      "defaultValue": ""
-    },
-    {
-      "name": "killrvideo.discovery.static.cassandra.contactPoints",
+      "name": "killrvideo.apollo.secure-connect-bundle",
       "type": "java.lang.String",
-      "defaultValue": ""
-    },
-    {
-      "name": "killrvideo.discovery.static.cassandra.port",
-      "type": "java.lang.Integer",
-      "defaultValue": ""
-  }],
+      "defaultValue": "/tmp/apollo.zip"
+    }],
   "hints": []
 }

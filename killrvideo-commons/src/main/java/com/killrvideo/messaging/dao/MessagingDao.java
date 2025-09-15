@@ -1,10 +1,9 @@
 package com.killrvideo.messaging.dao;
 
-import static com.killrvideo.messaging.utils.MessagingUtils.mapCustomError;
-import static com.killrvideo.messaging.utils.MessagingUtils.mapError;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+
+import com.killrvideo.messaging.utils.MessagingUtils;
 
 /**
  * Interface to work with Events.
@@ -36,14 +35,14 @@ public interface MessagingDao {
      * @param t
      */
     default CompletableFuture<Object> sendErrorEvent(String serviceName, Throwable t) {
-        return sendEvent(getErrorDestination(), mapError(t)); 
+        return sendEvent(getErrorDestination(), MessagingUtils.mapError(t));
     }
    
     /**
      * Send error event to bus.
      */
     default Future<? extends Object> sendErrorEvent(String serviceName, String customError) {
-        return sendEvent(getErrorDestination(), mapCustomError(customError));
+        return sendEvent(getErrorDestination(), MessagingUtils.mapCustomError(customError));
     }
     
 }

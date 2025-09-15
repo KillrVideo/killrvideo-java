@@ -3,31 +3,25 @@ package com.killrvideo.service.statistic.dto;
 import java.io.Serializable;
 import java.util.UUID;
 
-import com.datastax.driver.mapping.annotations.Column;
-import com.datastax.driver.mapping.annotations.PartitionKey;
-import com.datastax.driver.mapping.annotations.Table;
-import com.killrvideo.model.CommonConstants;
-import com.killrvideo.service.statistic.dao.StatisticsDseDao;
+import com.datastax.oss.driver.api.mapper.annotations.CqlName;
+import com.datastax.oss.driver.api.mapper.annotations.Entity;
+import com.datastax.oss.driver.api.mapper.annotations.PartitionKey;
+import com.killrvideo.dse.dao.DseSchema;
 
 /**
  * Pojo representing DTO for table 'video_playback_stats'.
  *
  * @author DataStax Developer Advocates team.
  */
-@Table(keyspace = 
-        CommonConstants.KILLRVIDEO_KEYSPACE, 
-       name = 
-        StatisticsDseDao.TABLENAME_PLAYBACK_STATS)
-public class VideoPlaybackStats implements Serializable {
+@Entity
+@CqlName(DseSchema.TABLENAME_PLAYBACK_STATS)
+public class VideoPlaybackStats implements Serializable, DseSchema {
 
     /** Serial. */
     private static final long serialVersionUID = -8636413035520458200L;
     
-    /** COLUNMNS NAMES. */
-    public static final String COLUMN_VIDEOID   = "videoid";
-    public static final String COLUMN_VIEWS     = "views";
-
     @PartitionKey
+    @CqlName(COLUMN_PLAYBACK_VIDEOID)
     private UUID videoid;
 
     /**
@@ -35,7 +29,7 @@ public class VideoPlaybackStats implements Serializable {
      * is no "@Counter" annotation that I know of.  No worries though, just use the incr() function
      * while using the QueryBuilder.  Something similar to with(QueryBuilder.incr("views")).
      */
-    @Column
+    @CqlName(COLUMN_PLAYBACK_VIEWS)
     private Long views;
 
     /**

@@ -7,10 +7,9 @@ spring:
       enabled: ALWAYS
   profiles:
    active:
-    #- discovery_etcd
-    #- messaging_kafka
-    - discovery_static
+    # Messaging profiles are exclusive : Enable either messaging_memory or messaging_kafka, not both
     - messaging_memory
+    #- messaging_kafka
     
 # ----------------------------------------------------------------------
 # KillrVideo Backend Services
@@ -19,94 +18,53 @@ killrvideo:
 
   application:
     name: killrvideo
-  
-  #
-  # Flags enabling/disabling services
-  # To start standalone service reuse the very same deliverable
-  # Simple disable everything except the one your are interested in.
-  #
-  services:
-    comment: true
-    rating: true
-    search: true
-    statistic: true
-    videoCatalog: true
-    user: true
-    suggestedVideo: true
-  
+    
+  # ----------------------------------------------------------------------
+  # Enable/Disable services in deliverable (MODULES)
+  # ----------------------------------------------------------------------
   grpc-server: 
     port: 50101
-      
-  cassandra:
-    clustername: killrvideo
-    mutation-error-log: /tmp/killrvideo-mutation-errors.log
+    services:
+      comment: true
+      rating: true
+      search: true
+      statistic: true
+      videoCatalog: true
+      user: true
+      suggestedVideo: true
+  
+  # ----------------------------------------------------------------------
+  # Cassandra configuration
+  # ----------------------------------------------------------------------
+  dse:
+    # You can override this value by defining env var: KILLRVIDEO_DSE_CONFIGURATION_FILE
+    configFile: application.conf
     maxNumberOfTries: 50
     delayBetweenTries: 5
+    search:
+      ignoredWords: and,or,but,nor,so,for,yet,after,as,till,to,the,at,in,not,now,of,if,this,an,are,all,about,along,by,is,it,on,why,be,can,com,get,out,see,some,new,these,that,thing,things,wish,known,say,they,had,here,like,live,let,do,with,what,when,www,watch,will,http,https,us,you,your,more,his,her,they,them,their,me,we,near,bit,ly,back,meet,know,key,video,various,find,only,from,kind,channel,comments,below,check,right,full,while,gets,up,each,no,buy,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
+    mutation-error-log: /tmp/killrvideo-mutation-errors.log
+    
+  # ----------------------------------------------------------------------
+  #   # Used only if profile 'messaging_memory' is enabled
+  # ----------------------------------------------------------------------
+  messaging.memory:
+    minThreads: 5
+    maxThreads: 10
+    ttlThreads: 60
+    queueSize: 1000
   
-  ssl:
-    # You can override this value by defining env var: §KILLRVIDEO_ENABLE_SSL
-    enable: false
-    # You can override this value by defining env var: §KILLRVIDEO_SSL_CERTIFICATE
-    CACertFileLocation: cassandra.cert
-  
-  search:
-    ignoredWords: and,or,but,nor,so,for,yet,after,as,till,to,the,at,in,not,now,of,if,this,an,are,all,about,along,by,is,it,on,why,be,can,com,get,out,see,some,new,these,that,thing,things,wish,known,say,they,had,here,like,live,let,do,with,what,when,www,watch,will,http,https,us,you,your,more,his,her,they,them,their,me,we,near,bit,ly,back,meet,know,key,video,various,find,only,from,kind,channel,comments,below,check,right,full,while,gets,up,each,no,buy,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z
-  
-  graph:
-    timeout: 3000
-    recommendation.name: killrvideo_video_recommendations
-  
-  ############################################################################################
-  # Define IP and endpoints for different technologies (kafka,cassandra)
-  # - Option 1 is looking for addresses registered in ETCD (enable profile discovery_etcd)
-  # - Option 2 is using static service names (enable profile discovery_static)
-  ############################################################################################
-  discovery:
-    # Service keys in ETCD
-    services:
-      comment:CommentsService
-      rating:RatingsService
-      search:SearchService
-      statistic:StatisticsService
-      suggestedVideo:SuggestedVideoService
-      user:UserManagementService
-      videoCatalog:VideoCatalogService
-      cassandra:cassandra
-      kafka:kafka
-    # Lookup in ETCD to get Kafka and DSE adresses
-    etcd:
-      host: 10.0.75.1
-      port: 2379
-      maxNumberOfTries: 30
-    # No lookups, direct values (leveraging on Docker,Kubernetes serviceNames) 
-    static:
-      # You can override this value by defining env var: §KILLRVIDEO_KAFKA_CONTACTPOINTS
-      kafka: 
-        brokers: kafka
-        port: 8082
-      # You can override this value by defining env var: §KILLRVIDEO_DSE_CONTACT_POINTS
-      cassandra:
-        contactPoints: localhost
-        port: 9042
-
-  ############################################################################################
-  # Communication between services are be implemented
-  # both with Guava or Kafka. Pick the one you want using
-  # profiles 'messaging_kafka' or 'messaging_memory'
-  ############################################################################################
-  messaging:
-    destinations:
-      errors: topic-kv-errors
-      videoRated: topic-kv-videoRating
-      commentCreated: topic-kv-commentCreation
-      userCreated: topic-kv-userCreation
-      youTubeVideoAdded: topic-kv-videoCreation
-    kafka:
-      ack: 1
-      consumerGroup: killrvideo
-    memory:
-      minThreads: 5
-      maxThreads: 10
-      ttlThreads: 60
-      queueSize: 1000
-          
+  # ----------------------------------------------------------------------
+  # Used only if profile 'messaging_kafka' is enabled
+  # ----------------------------------------------------------------------  
+  kafka:
+     brokers: kafka
+     port: 8082
+     ack: 1
+     consumerGroup: killrvideo
+     destinations:
+       errors: topic-kv-errors
+       videoRated: topic-kv-videoRating
+       commentCreated: topic-kv-commentCreation
+       userCreated: topic-kv-userCreation
+       youTubeVideoAdded: topic-kv-videoCreation

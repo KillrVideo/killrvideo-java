@@ -1,20 +1,9 @@
 version: '3'
 
-#
-# docker-compose.yaml
-#   Simple compose file for running the Java services in Docker along with other containers comprising the
-#   KillrVideo.
-#   For more complex configuration options including metrics, external volumes, OpsCenter,
-#   etc., see https://github.com/KillrVideo/killrvideo-docker-common
-#
-#   Note: the default configuration here uses the LATEST version of the killrvideo-python
-#   Docker image, which can be built using scripts/docker_build.sh.
-#
-
 services:
 
   web: # Web Interface
-    image: killrvideo/killrvideo-web:3.0.1
+    image: killrvideo/killrvideo-web:3
     ports:
       - "3000:3000" # Exposes port to be available externally
     depends_on:
@@ -60,14 +49,14 @@ services:
 
   # One-Time Bootstrap Container, configures DSE to have required keyspaces etc.
   dse-config: 
-    image: killrvideo/killrvideo-dse-config:3.0.0
+    image: killrvideo/killrvideo-dse-config:3
     depends_on:
       - dse # Needs DSE to be running
 
   # Sample Data Generator, imitates behaviour of users on the killrVideo website. 
   # Adds comments and rates videos, upload new videos and so on.
   generator: 
-    image: killrvideo/killrvideo-generator:3.0.2
+    image: killrvideo/killrvideo-generator:3
     depends_on:
       - backend # Needs Backend to be running
     environment:

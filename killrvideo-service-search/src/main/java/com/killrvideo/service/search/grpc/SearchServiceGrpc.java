@@ -5,20 +5,27 @@ import static com.killrvideo.service.search.grpc.SearchServiceGrpcValidator.vali
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Optional;
-import java.util.TreeSet;
-import java.util.concurrent.CompletableFuture;
+import java.util.Set;
+
+import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.killrvideo.dse.dto.ResultListPage;
 import com.killrvideo.dse.dto.Video;
 import com.killrvideo.service.search.dao.SearchDseDao;
+import com.killrvideo.service.search.dao.SearchDseDaoApollo;
+import com.killrvideo.service.search.dao.SearchDseDaoMapperBuilder;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -36,14 +43,40 @@ import killrvideo.search.SearchServiceOuterClass.SearchVideosResponse;
 @Service
 public class SearchServiceGrpc extends SearchServiceImplBase {
 
-    /** Loger for that class. */
+    /** Logger for that class. */
     private static Logger LOGGER = LoggerFactory.getLogger(SearchServiceGrpc.class);
     
-    @Value("${killrvideo.discovery.services.search : SearchService}")
-    private String serviceKey;
-   
-    @Autowired
+    /** Definition of operation for Search. */
     private SearchDseDao dseSearchDao;
+    
+    @Autowired
+    private CqlSession cqlSession;
+    
+    @Autowired
+    @Qualifier("killrvideo.keyspace")
+    private CqlIdentifier dseKeySpace;
+    
+    @Value("${killrvideo.apollo.override-local-dse:false}")
+    private boolean connectApollo = false;
+    
+    /**
+     * Create a set of sentence conjunctions and other "undesirable"
+     * words we will use later to exclude from search results.
+     * Had to use .split() below because of the following conversation:
+     * https://github.com/spring-projects/spring-boot/issues/501
+     */
+    @Value("#{'${killrvideo.dse.search.ignoredWords}'.split(',')}")
+    private Set<String> ignoredWords = new HashSet<>();
+    
+    @PostConstruct
+    public void init() {
+        if (connectApollo) {
+            LOGGER.info("Search service will use Apollo");
+            dseSearchDao = new SearchDseDaoApollo();
+        } else {
+            dseSearchDao = new SearchDseDaoMapperBuilder(cqlSession).build().searchDao(dseKeySpace);
+        }
+    }
     
     /** {@inheritDoc} */
     @Override
@@ -101,16 +134,14 @@ public class SearchServiceGrpc extends SearchServiceImplBase {
         int              searchPageSize = grpcReq.getPageSize();
         
         // Invoke Dao (Async)
-        CompletableFuture<TreeSet<String>> futureDao = 
-                dseSearchDao.getQuerySuggestionsAsync(searchQuery, searchPageSize);
-        
-        // Mapping back to GRPC beans
-        futureDao.whenComplete((suggestionSet, error) -> {
-                        
+        dseSearchDao.getQuerySuggestionsAsync(searchQuery, searchPageSize)
+                    // Mapping back to GRPC beans
+                    .whenComplete((suggestionSet, error) -> {
           if (error == null) {
               traceSuccess("getQuerySuggestions", starts);
               final GetQuerySuggestionsResponse.Builder builder = GetQuerySuggestionsResponse.newBuilder();
               builder.setQuery(grpcReq.getQuery());
+              suggestionSet.removeAll(ignoredWords);
               builder.addAllSuggestions(suggestionSet);
               grpcResObserver.onNext(builder.build());
               grpcResObserver.onCompleted();
@@ -145,16 +176,6 @@ public class SearchServiceGrpc extends SearchServiceImplBase {
      */
     private void traceError(String method, Instant starts, Throwable t) {
         LOGGER.error("An error occured in {} after {}", method, Duration.between(starts, Instant.now()), t);
-    }
-
-    /**
-     * Getter accessor for attribute 'serviceKey'.
-     *
-     * @return
-     *       current value of 'serviceKey'
-     */
-    public String getServiceKey() {
-        return serviceKey;
     }
 
 }

@@ -1,5 +1,6 @@
 package com.killrvideo.dse.graph;
 
+import org.apache.tinkerpop.gremlin.process.remote.RemoteConnection;
 import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
@@ -28,6 +29,10 @@ public class KillrVideoTraversalSourceDsl extends GraphTraversalSource implement
 
     public KillrVideoTraversalSourceDsl(final Graph graph) {
         super(graph);
+    }
+    
+    public KillrVideoTraversalSourceDsl(final RemoteConnection connection) {
+        super(connection);
     }
 
     /**

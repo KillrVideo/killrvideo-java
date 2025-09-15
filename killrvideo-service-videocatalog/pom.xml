@@ -2,28 +2,18 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!-- ~    MVN Coordonates       ~ -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
     <modelVersion>4.0.0</modelVersion>
     <artifactId>killrvideo-service-videocatalog</artifactId>
     <name> + killrvideo-service-videocatalog</name>
     <description>Service Videos Catalog</description>
-    
-     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- ~ Parent                   ~ -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<parent>
+   
+    <parent>
 		<groupId>com.datastax</groupId>
 		<artifactId>killrvideo-parent</artifactId>
-		<version>3.0.0</version>
+		<version>3.1.0</version>
 	</parent>
    
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- ~ DEPENDENCIES             ~ -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<dependencies>
+   <dependencies>
 		<dependency>
 			<groupId>com.datastax</groupId>
 			<artifactId>killrvideo-commons</artifactId>
@@ -34,57 +24,6 @@
             <artifactId>commons-collections4</artifactId>
         </dependency>
 	</dependencies>
-
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<!-- ~ BUILD ~ -->
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<build>
-		<plugins>
-
-			<!-- Add GRPC Sources -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>${build-helper-maven-plugin.version}</version>
-				<executions>
-					<execution>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>add-source</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<source>target/generated-sources/protobuf/java</source>
-								<source>target/generated-sources/protobuf/grpc-java</source>
-							</sources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<!-- Generate Protobuf data -->
-			<plugin>
-				<groupId>org.xolstice.maven.plugins</groupId>
-				<artifactId>protobuf-maven-plugin</artifactId>
-				<version>${protobuf-maven-plugin.version}</version>
-				<configuration>
-					<protoSourceRoot>${basedir}/src/main/resources/proto</protoSourceRoot>
-					<protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
-					<pluginId>grpc-java</pluginId>
-					<pluginArtifact>io.grpc:protoc-gen-grpc-java:${protoc-gen-grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>compile</goal>
-							<goal>compile-custom</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-		</plugins>
-	</build>
-
+	
 </project>
 

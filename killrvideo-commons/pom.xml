@@ -11,71 +11,67 @@
 	<parent>
 		<groupId>com.datastax</groupId>
 		<artifactId>killrvideo-parent</artifactId>
-		<version>3.0.0</version>
+		<version>3.1.0</version>
 	</parent>
 
 	<dependencies>
 		
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+		</dependency>
+
+		<!-- Cassandra Driver -->
+		<dependency>
+			<groupId>com.datastax.oss</groupId>
+			<artifactId>java-driver-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.datastax.oss</groupId>
+			<artifactId>java-driver-query-builder</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.datastax.oss</groupId>
+			<artifactId>java-driver-mapper-runtime</artifactId>
+		</dependency>
+		
+		<dependency>
+		   <groupId>com.evanlennick</groupId>
+		   <artifactId>retry4j</artifactId>
+		</dependency>
+
 		<!-- Spring, inversion of control -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
 		</dependency>
 		
-		<!-- Logging -->
 		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
+		 <groupId>commons-codec</groupId>
+		 <artifactId>commons-codec</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-core</artifactId>
-		</dependency>
-		
-		<!-- Java driver for DSE -->
-		<dependency>
-			<groupId>com.datastax.dse</groupId>
-			<artifactId>dse-java-driver-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.datastax.dse</groupId>
-			<artifactId>dse-java-driver-mapping</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.datastax.dse</groupId>
-			<artifactId>dse-java-driver-extras</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.datastax.dse</groupId>
-			<artifactId>dse-java-driver-graph</artifactId>
-		</dependency>
-		
-		<!--  Service Discovery -->
-		<dependency>
-			<groupId>com.xqbase</groupId>
-			<artifactId>etcd4j</artifactId>
-		</dependency>
-		
-		<!--  Retry until ETCD and DSE are ready. -->
-		<dependency>
-			<groupId>com.evanlennick</groupId>
-			<artifactId>retry4j</artifactId>
-		</dependency>
+			
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
 		<dependency>
-        	<groupId>javax.annotation</groupId>
-        	<artifactId>javax.annotation-api</artifactId>
-    	</dependency>  
+			<groupId>javax.annotation</groupId>
+			<artifactId>javax.annotation-api</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
+			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>
+			<exclusions>
+				<exclusion>
+                	<groupId>org.openjfx</groupId>
+    				<artifactId>javafx.base</artifactId>
+            	</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish</groupId>
@@ -85,17 +81,17 @@
 			<groupId>javax.el</groupId>
 			<artifactId>javax.el-api</artifactId>
 		</dependency>
-		
+
 		<!-- Generate Common types -->
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-all</artifactId>
-        </dependency>
-		
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-all</artifactId>
+		</dependency>
+
 		<!-- Transport Kafka -->
 		<dependency>
 			<groupId>org.apache.kafka</groupId>
@@ -112,84 +108,6 @@
 			<artifactId>guava</artifactId>
 		</dependency>
 		
-		<!-- Junit5 + Spring -->
-		<dependency>
-			<groupId>org.junit.platform</groupId>
-			<artifactId>junit-platform-launcher</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.platform</groupId>
-			<artifactId>junit-platform-runner</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.platform</groupId>
-			<artifactId>junit-platform-console-standalone</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-params</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		
 	</dependencies>
-
-	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!-- ~ BUILD : Generate Common types in PROTO  ~ -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-	<build>
-		<plugins> 
-			
-			<!-- Add GRPC Sources -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>${build-helper-maven-plugin.version}</version>
-				<executions>
-					<execution>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>add-source</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<source>target/generated-sources/protobuf/java</source>
-							</sources>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		
-			<!-- Generate Protobuf data -->
-			<plugin>
-                <groupId>org.xolstice.maven.plugins</groupId>
-                <artifactId>protobuf-maven-plugin</artifactId>
-                <version>${protobuf-maven-plugin.version}</version>
-                <configuration>
-                    <protoSourceRoot>${basedir}/src/main/resources/proto</protoSourceRoot>
-                    <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
-                    <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${protoc-gen-grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
-                </configuration>
-				<executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>compile-custom</goal>
-                        </goals>
-                    </execution>
-                </executions>
-             </plugin>
-           
-		</plugins>
-	</build>
-
 
 </project>

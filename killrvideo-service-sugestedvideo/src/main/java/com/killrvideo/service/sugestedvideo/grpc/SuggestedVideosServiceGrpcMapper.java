@@ -1,6 +1,6 @@
 package com.killrvideo.service.sugestedvideo.grpc;
 
-import static com.killrvideo.utils.GrpcMappingUtils.uuidToUuid;
+import static com.killrvideo.grpc.GrpcMappingUtils.uuidToUuid;
 import static com.killrvideo.utils.ValidationUtils.initErrorString;
 import static com.killrvideo.utils.ValidationUtils.validate;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import com.killrvideo.dse.dto.Video;
-import com.killrvideo.utils.GrpcMappingUtils;
+import com.killrvideo.grpc.GrpcMappingUtils;
 
 import io.grpc.stub.StreamObserver;
 import killrvideo.suggested_videos.SuggestedVideosService.GetRelatedVideosRequest;
@@ -34,14 +34,13 @@ public class SuggestedVideosServiceGrpcMapper {
     /**
      * Hide constructor of utility class.
      */
-    private SuggestedVideosServiceGrpcMapper() {
-    }
+    private SuggestedVideosServiceGrpcMapper() {}
     
     public static Video mapVideoAddedtoVideoDTO(YouTubeVideoAdded videoAdded) {
         // Convert Stub to Dto, dao must not be related to interface GRPC
         Video video = new Video();
         video.setVideoid(UUID.fromString(videoAdded.getVideoId().toString()));
-        video.setAddedDate(GrpcMappingUtils.timestampToDate(videoAdded.getAddedDate()));
+        video.setAddedDate(GrpcMappingUtils.timestampToInstant(videoAdded.getAddedDate()));
         video.setUserid(UUID.fromString(videoAdded.getUserId().toString()));
         video.setName(videoAdded.getName());
         video.setTags(new HashSet<String>(videoAdded.getTagsList()));
@@ -80,7 +79,7 @@ public class SuggestedVideosServiceGrpcMapper {
                 .setVideoId(uuidToUuid(v.getVideoid()))
                 .setUserId(uuidToUuid(v.getUserid()))
                 .setPreviewImageLocation(v.getPreviewImageLocation())
-                .setAddedDate(GrpcMappingUtils.dateToTimestamp(v.getAddedDate()))
+                .setAddedDate(GrpcMappingUtils.instantToTimeStamp(v.getAddedDate()))
                 .build();
     }
     

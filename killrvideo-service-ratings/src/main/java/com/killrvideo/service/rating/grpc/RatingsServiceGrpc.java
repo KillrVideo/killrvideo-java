@@ -10,15 +10,21 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.CqlSession;
+import com.killrvideo.grpc.GrpcMappingUtils;
 import com.killrvideo.messaging.dao.MessagingDao;
 import com.killrvideo.service.rating.dao.RatingDseDao;
-import com.killrvideo.utils.GrpcMappingUtils;
+import com.killrvideo.service.rating.dao.RatingDseDaoMapperBuilder;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -42,18 +48,27 @@ public class RatingsServiceGrpc extends RatingsServiceImplBase {
     /** Loger for that class. */
     private static Logger LOGGER = LoggerFactory.getLogger(RatingsServiceGrpc.class);
     
+    /** Service definition for ratings.*/
+    private RatingDseDao dseRatingDao;
+    
     /** Inter-service communications (messaging). */
     @Autowired
     private MessagingDao messagingDao;
-    
-    @Value("${killrvideo.discovery.services.rating : RatingsService}")
-    private String serviceKey;
     
     @Value("${killrvideo.messaging.kafka.topics.videoRated : topic-kv-videoRating}")
     private String topicvideoRated;
     
     @Autowired
-    private RatingDseDao dseRatingDao;
+    private CqlSession cqlSession;
+    
+    @Autowired
+    @Qualifier("killrvideo.keyspace")
+    private CqlIdentifier dseKeySpace;
+    
+    @PostConstruct
+    public void init() {
+        dseRatingDao = new RatingDseDaoMapperBuilder(cqlSession).build().ratingDao(dseKeySpace);
+    }
     
     /** {@inheritDoc} */
     @Override
@@ -183,16 +198,5 @@ public class RatingsServiceGrpc extends RatingsServiceImplBase {
     private void traceError(String method, Instant starts, Throwable t) {
         LOGGER.error("An error occured in {} after {}", method, Duration.between(starts, Instant.now()), t);
     }
-
-    /**
-     * Getter accessor for attribute 'serviceKey'.
-     *
-     * @return
-     *       current value of 'serviceKey'
-     */
-    public String getServiceKey() {
-        return serviceKey;
-    }
     
-
 }

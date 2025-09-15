@@ -1,26 +1,36 @@
 package com.killrvideo.service.sugestedvideo.grpc;
 
+import static com.killrvideo.grpc.GrpcMappingUtils.uuidToUuid;
 import static com.killrvideo.service.sugestedvideo.grpc.SuggestedVideosServiceGrpcMapper.validateGrpcRequest_getRelatedVideo;
 import static com.killrvideo.service.sugestedvideo.grpc.SuggestedVideosServiceGrpcMapper.validateGrpcRequest_getUserSuggestedVideo;
-import static com.killrvideo.utils.GrpcMappingUtils.uuidToUuid;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+
+import javax.annotation.PostConstruct;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.killrvideo.dse.dto.ResultListPage;
+import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.CqlSession;
 import com.killrvideo.dse.dto.Video;
 import com.killrvideo.service.sugestedvideo.dao.SuggestedVideosDseDao;
+import com.killrvideo.service.sugestedvideo.dao.SuggestedVideosDseDaoApollo;
+import com.killrvideo.service.sugestedvideo.dao.SuggestedVideosDseDaoMapperBuilder;
+import com.killrvideo.service.sugestedvideo.dao.SuggestedVideosGraphDao;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
@@ -42,11 +52,44 @@ public class SuggestedVideosServiceGrpc extends SuggestedVideoServiceImplBase {
     /** Loger for that class. */
     private static Logger LOGGER = LoggerFactory.getLogger(SuggestedVideosServiceGrpc.class);
      
-    @Value("${killrvideo.discovery.services.suggestedVideo : SuggestedVideoService}")
-    private String serviceKey;
+    /** Services related to videos suggestions. */
+    private SuggestedVideosDseDao suggestedVideosDseDao;
     
     @Autowired
-    private SuggestedVideosDseDao suggestedVideosDseDao;
+    private CqlSession cqlSession;
+    
+    @Autowired
+    @Qualifier("killrvideo.keyspace")
+    private CqlIdentifier dseKeySpace;
+    
+    @Value("${killrvideo.apollo.override-local-dse:false}")
+    private boolean connectApollo = false;
+    
+    @Autowired
+    private SuggestedVideosGraphDao suggestedVideosGraphDao;
+    
+    /**
+     * Create a set of sentence conjunctions and other "undesirable"
+     * words we will use later to exclude from search results.
+     * Had to use .split() below because of the following conversation:
+     * https://github.com/spring-projects/spring-boot/issues/501
+     */
+    @Value("#{'${killrvideo.dse.search.ignoredWords}'.split(',')}")
+    private Set<String> ignoredWords = new HashSet<>();
+    
+    @PostConstruct
+    public void init() {
+        
+        if (connectApollo) {
+            LOGGER.info("Suggested Video service will use Apollo");
+            suggestedVideosDseDao = new SuggestedVideosDseDaoApollo();
+        } else {
+            suggestedVideosDseDao = 
+                    new SuggestedVideosDseDaoMapperBuilder(cqlSession).build().suggestedVideosDao(dseKeySpace);
+        }
+        
+        
+    }
     
     /** {@inheritDoc} */
     @Override
@@ -63,12 +106,10 @@ public class SuggestedVideosServiceGrpc extends SuggestedVideoServiceImplBase {
         int              videoPageSize = grpcReq.getPageSize();
         Optional<String> videoPagingState = Optional.ofNullable(grpcReq.getPagingState()).filter(StringUtils::isNotBlank);
         
-        // Invoke DAO Async
-        CompletableFuture<ResultListPage<Video>> futureDao = 
-                suggestedVideosDseDao.getRelatedVideos(videoId, videoPageSize, videoPagingState);
-        
         // Map Result back to GRPC
-        futureDao.whenComplete((resultPage, error) -> {
+        suggestedVideosDseDao
+                .getRelatedVideos(videoId, videoPageSize, videoPagingState, ignoredWords)
+                .whenComplete((resultPage, error) -> {
             
             if (error != null ) {
                 traceError("getRelatedVideos", starts, error);
@@ -76,7 +117,7 @@ public class SuggestedVideosServiceGrpc extends SuggestedVideoServiceImplBase {
                 
             } else {
                 
-                traceSuccess( "getRelatedVideos", starts);
+                traceSuccess("getRelatedVideos", starts);
                 Uuid videoGrpcUUID = uuidToUuid(videoId);
                 final GetRelatedVideosResponse.Builder builder = 
                         GetRelatedVideosResponse.newBuilder().setVideoId(videoGrpcUUID);
@@ -104,24 +145,26 @@ public class SuggestedVideosServiceGrpc extends SuggestedVideoServiceImplBase {
         // Mapping GRPC => Domain (Dao)
         final UUID userid = UUID.fromString(grpcReq.getUserId().getValue());
         
-        // Invoke DAO Async
-        CompletableFuture<List<Video>> futureDao = suggestedVideosDseDao.getSuggestedVideosForUser(userid);
+        CompletionStage< List<Video> > result;
+        if (connectApollo) {
+            result = new CompletableFuture<List<Video>>();
+        } else {
+            result = suggestedVideosGraphDao.getSuggestedVideosForUser(userid);
+        }
         
-        // Map Result back to GRPC
-        futureDao.whenComplete((videos, error) -> {
-            
-            if (error != null ) {
-                traceError("getSuggestedForUser", starts, error);
-                grpcResObserver.onError(Status.INTERNAL.withCause(error).asRuntimeException());
-                
-            } else {
-                traceSuccess("getSuggestedForUser", starts);
-                Uuid userGrpcUUID = uuidToUuid(userid);
-                final GetSuggestedForUserResponse.Builder builder = GetSuggestedForUserResponse.newBuilder().setUserId(userGrpcUUID);
-                videos.stream().map(SuggestedVideosServiceGrpcMapper::mapVideotoSuggestedVideoPreview).forEach(builder::addVideos);
-                grpcResObserver.onNext(builder.build());
-                grpcResObserver.onCompleted();
-            }
+        result.whenComplete((videos, error) -> {
+                if (error != null ) {
+                    traceError("getSuggestedForUser", starts, error);
+                    grpcResObserver.onError(Status.INTERNAL.withCause(error).asRuntimeException());
+                    
+                } else {
+                    traceSuccess("getSuggestedForUser", starts);
+                    Uuid userGrpcUUID = uuidToUuid(userid);
+                    final GetSuggestedForUserResponse.Builder builder = GetSuggestedForUserResponse.newBuilder().setUserId(userGrpcUUID);
+                    videos.stream().map(SuggestedVideosServiceGrpcMapper::mapVideotoSuggestedVideoPreview).forEach(builder::addVideos);
+                    grpcResObserver.onNext(builder.build());
+                    grpcResObserver.onCompleted();
+                }
         });
     }
         
@@ -149,15 +192,5 @@ public class SuggestedVideosServiceGrpc extends SuggestedVideoServiceImplBase {
      */
     private void traceError(String method, Instant starts, Throwable t) {
         LOGGER.error("An error occured in {} after {}", method, Duration.between(starts, Instant.now()), t);
-    }
-
-    /**
-     * Getter accessor for attribute 'serviceKey'.
-     *
-     * @return
-     *       current value of 'serviceKey'
-     */
-    public String getServiceKey() {
-        return serviceKey;
     }
 }
